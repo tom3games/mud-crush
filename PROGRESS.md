@@ -49,3 +49,5 @@
 - mud-crush の index.html に転送 script（ghMove）と canonical/og を tom3games.com/play/mud-crush/ へ。Xのポストの URL も同じ。?v=7
 - 言葉の決め方: Google 検索候補で確認。「車 クラッシュ ゲーム」（候補に「車 クラッシュ ゲーム 無料」が出る・他のゲームの KWS と重ならない）。英語は "car crash game"（候補が多数）。ほかの案「車 バトル ゲーム」「車 ぶつけ合い」「車 潰し合い」は候補が出なかったので外した
 - portal の6か所: games.mjs・説明ページ ja/mud-crush.md と _keywords.tsv・alts.mjs（ALTS と KWS）・en.mjs（GAMES_EN と NOREN_EN）・en-pages-c.mjs・tools/verify.mjs の READY
+- portal: build・og・pages-only → verify --quick（NG 0件・ページ229・mud-crush は /games/ /en/games/ とも狙う言葉が title・h1 に入り本文4回/2回）→ wrangler deploy（Version 138540ff）。本番で /play/mud-crush/・og.png・音・/games/mud-crush/・/en/games/mud-crush/ が 200、/play は ?v=7・canonical と og は tom3games.com、トップと sitemap に載った。github.io からは tom3games.com/play/mud-crush/ へ転送を確認し、本番でタイトル→整備→試合開始・エラー0
+- 一覧 /games/ は 404（手順どおり正しい）
