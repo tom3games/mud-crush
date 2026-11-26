@@ -1,6 +1,6 @@
 // 絵はすべてその場で描く（画像ファイルなし）。採石場の土・泥・岩肌・空
 import * as THREE from 'three'
-import { WORLD, MUDS, MOUNDS } from './arena.js?v=5'
+import { WORLD, MUDS, MOUNDS } from './arena.js?v=6'
 
 function rnd(seed) { let a = seed; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 } }
 function canvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d')] }
@@ -97,7 +97,7 @@ export function skyTexture() {
   const [c, g] = canvas(1024, 512), R = rnd(4)
   const gr = g.createLinearGradient(0, 0, 0, 512); gr.addColorStop(0, '#3d5d86'); gr.addColorStop(0.22, '#6f86a0'); gr.addColorStop(0.38, '#c2a47c'); gr.addColorStop(0.47, '#d9b184'); gr.addColorStop(0.5, '#c9a67c'); gr.addColorStop(1, '#8a6a48'); g.fillStyle = gr; g.fillRect(0, 0, 1024, 512)
   // 薄い雲の筋と、土ぼこりの層
-  for (let i = 0; i < 70; i++) { const y = 40 + R() * 190, w = 80 + R() * 260; const gg = g.createLinearGradient(0, y - 8, 0, y + 8); gg.addColorStop(0, 'rgba(255,230,200,0)'); gg.addColorStop(0.5, `rgba(255,226,190,${0.05 + R() * 0.1})`); gg.addColorStop(1, 'rgba(255,230,200,0)'); g.fillStyle = gg; g.fillRect(R() * 1024 - w / 2, y - 8, w, 16) }
+  for (let i = 0; i < 70; i++) { const y = 40 + R() * 190, w = 80 + R() * 260, x0 = R() * 1024, al = 0.05 + R() * 0.1; for (const o of [-1024, 0, 1024]) { g.save(); g.translate(x0 + o, y); g.scale(w / 8, 1); const gg = g.createRadialGradient(0, 0, 0, 0, 0, 8); gg.addColorStop(0, `rgba(255,226,190,${al})`); gg.addColorStop(1, 'rgba(255,226,190,0)'); g.fillStyle = gg; g.beginPath(); g.arc(0, 0, 8, 0, 7); g.fill(); g.restore() } }   // 雲の筋（端が柔らかい楕円。縁が縦の線に見えないように）
   const hz = g.createLinearGradient(0, 150, 0, 262); hz.addColorStop(0, 'rgba(214,170,120,0)'); hz.addColorStop(1, 'rgba(226,176,120,0.65)'); g.fillStyle = hz; g.fillRect(0, 150, 1024, 112)
   // 低い太陽（光の向きに合わせた位置）。まわりは黄ばんだ光のにじみ
   const sg = g.createRadialGradient(512, 193, 3, 512, 193, 220); sg.addColorStop(0, 'rgba(255,250,232,1)'); sg.addColorStop(0.035, 'rgba(255,238,190,0.98)'); sg.addColorStop(0.12, 'rgba(255,210,140,0.55)'); sg.addColorStop(1, 'rgba(255,170,90,0)'); g.fillStyle = sg; g.fillRect(0, 0, 1024, 512)
@@ -151,23 +151,24 @@ export function grungeTexture() {
   const t = tex(c, true, 4); return t
 }
 // 排土板の塗装: 黄橙の塗装が剥げて地金と錆が出る。溶接の筋・擦り傷・泥のこびりつき。bump は剥げた所を凹ませる高さの絵
-export function wornPaintTexture() {
-  const S = 512, [c, g] = canvas(S, S), [bc, bg] = canvas(S, S), R = rnd(61)
+export function wornPaintTexture(kind = 'flat') {
+  const S = 512, [c, g] = canvas(S, S), [bc, bg] = canvas(S, S), R = rnd(kind === 'edge' ? 63 : 61)
   g.fillStyle = '#c4801e'; g.fillRect(0, 0, S, S); bg.fillStyle = '#9a9a9a'; bg.fillRect(0, 0, S, S)
-  for (let i = 0; i < 400; i++) { const x = R() * S, y = R() * S, r = 6 + R() * 46; g.fillStyle = `rgba(${R() < 0.5 ? '150,92,22' : '214,150,50'},${0.05 + R() * 0.09})`; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill() }
-  // 上から垂れる錆の筋
-  for (let i = 0; i < 40; i++) { const x = R() * S, y = R() * S * 0.8, w = 2 + R() * 9, h = 40 + R() * 200; const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, 'rgba(110,50,18,0)'); gr.addColorStop(0.3, `rgba(110,50,18,${0.2 + R() * 0.3})`); gr.addColorStop(1, 'rgba(110,50,18,0)'); g.fillStyle = gr; g.fillRect(x, y, w, h) }
-  // 剥げ: 角ばった欠け。縁に集まる。中は地金（黒灰）と錆、縁は明るい金属の欠け口
+  // 塗装の色むらとつや・ほこり（平らな面はこれを残す）
+  for (let i = 0; i < 260; i++) { const x = R() * S, y = R() * S, r = 10 + R() * 70; g.fillStyle = `rgba(${R() < 0.5 ? '160,100,26' : '226,160,58'},${0.04 + R() * 0.07})`; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill() }
+  for (let i = 0; i < 26; i++) { const x = R() * S, y = R() * S, w = 2 + R() * 7, h = 50 + R() * 190; const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, 'rgba(110,50,18,0)'); gr.addColorStop(0.3, `rgba(110,50,18,${0.1 + R() * 0.2})`); gr.addColorStop(1, 'rgba(110,50,18,0)'); g.fillStyle = gr; g.fillRect(x, y, w, h) }   // 錆の垂れ（少し）
+  // 剥げ: かたまりで出る。flat は少数の小さなかたまり、edge は多めのかたまり。中は地金と錆、縁に明るい欠け口
   const chip = (x, y, r) => { const n = 6 + (R() * 5 | 0), pts = []; for (let i = 0; i < n; i++) { const a = i / n * 6.283 + R() * 0.5, d = r * (0.45 + R() * 0.7); pts.push([x + Math.cos(a) * d * 1.3, y + Math.sin(a) * d * 0.8]) }
     for (const [ctx, fill, stroke] of [[g, R() < 0.35 ? '#6b3a1c' : '#2d2d2e', 'rgba(220,200,160,0.7)'], [bg, '#2a2a2a', '#f0f0f0']]) { ctx.fillStyle = fill; ctx.strokeStyle = stroke; ctx.lineWidth = 1.2; ctx.beginPath(); pts.forEach(([px, py], i) => i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)); ctx.closePath(); ctx.fill(); ctx.stroke() } }
-  for (let i = 0; i < 30; i++) chip(R() * S, R() * S, 2 + R() * 7)
-  for (let i = 0; i < 90; i++) { const edge = R() < 0.5 ? R() * 36 : S - R() * 36; if (R() < 0.5) chip(edge, R() * S, 2 + R() * 9); else chip(R() * S, edge, 2 + R() * 9) }
-  // 擦り傷（明るい細い線）
-  for (let i = 0; i < 160; i++) { const x = R() * S, y = R() * S, l = 14 + R() * 70, a = -0.5 + R() * 0.4; for (const [ctx, col] of [[g, `rgba(235,225,205,${0.15 + R() * 0.3})`], [bg, 'rgba(70,70,70,0.9)']]) { ctx.strokeStyle = col; ctx.lineWidth = 0.8 + R(); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); ctx.stroke() } }
-  // 溶接の筋（横に細かい波）
-  for (const y0 of [90, 250, 420]) { for (let x = 0; x < S; x += 4) { const y = y0 + Math.sin(x * 0.5) * 2.2; g.fillStyle = 'rgba(30,24,18,0.55)'; g.beginPath(); g.arc(x, y, 2.6, 0, 7); g.fill(); bg.fillStyle = 'rgba(240,240,240,0.9)'; bg.beginPath(); bg.arc(x, y, 2.6, 0, 7); bg.fill() } }
+  const nCl = kind === 'edge' ? 7 : 3, per = kind === 'edge' ? 16 : 5, rmax = kind === 'edge' ? 9 : 5
+  for (let k = 0; k < nCl; k++) { const cx = R() * S, cy = R() * S, sp = 30 + R() * 50; for (let i = 0; i < per; i++) chip(cx + (R() - 0.5) * sp * 2, cy + (R() - 0.5) * sp, 1.5 + R() * rmax) }
+  // 擦れ: 明るい金属の細い傷（向きをそろえる）
+  const ns = kind === 'edge' ? 110 : 50
+  for (let i = 0; i < ns; i++) { const x = R() * S, y = R() * S, l = 14 + R() * 60, a = -0.45 + R() * 0.3; for (const [ctx, col] of [[g, `rgba(235,225,205,${0.12 + R() * 0.25})`], [bg, 'rgba(70,70,70,0.9)']]) { ctx.strokeStyle = col; ctx.lineWidth = 0.7 + R() * 0.8; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); ctx.stroke() } }
+  // 溶接の筋
+  for (const y0 of [90, 250, 420]) { for (let x = 0; x < S; x += 4) { const y = y0 + Math.sin(x * 0.5) * 2.2; g.fillStyle = 'rgba(30,24,18,0.5)'; g.beginPath(); g.arc(x, y, 2.4, 0, 7); g.fill(); bg.fillStyle = 'rgba(240,240,240,0.9)'; bg.beginPath(); bg.arc(x, y, 2.4, 0, 7); bg.fill() } }
   // 下はこびりついた泥
-  const mg = g.createLinearGradient(0, S * 0.6, 0, S); mg.addColorStop(0, 'rgba(58,40,24,0)'); mg.addColorStop(1, 'rgba(58,40,24,0.78)'); g.fillStyle = mg; g.fillRect(0, S * 0.6, S, S * 0.4)
-  for (let i = 0; i < 90; i++) { const x = R() * S, y = S * (0.7 + R() * 0.3), r = 3 + R() * 10; g.fillStyle = 'rgba(52,36,22,0.7)'; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); bg.fillStyle = 'rgba(235,235,235,0.9)'; bg.beginPath(); bg.arc(x, y, r, 0, 7); bg.fill() }
+  const mg = g.createLinearGradient(0, S * 0.62, 0, S); mg.addColorStop(0, 'rgba(58,40,24,0)'); mg.addColorStop(1, 'rgba(58,40,24,0.7)'); g.fillStyle = mg; g.fillRect(0, S * 0.62, S, S * 0.38)
+  for (let i = 0; i < 60; i++) { const x = R() * S, y = S * (0.74 + R() * 0.26), r = 3 + R() * 9; g.fillStyle = 'rgba(52,36,22,0.65)'; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); bg.fillStyle = 'rgba(235,235,235,0.9)'; bg.beginPath(); bg.arc(x, y, r, 0, 7); bg.fill() }
   const m = tex(c, true, 8), b = tex(bc, false, 4); return { map: m, bump: b }
 }

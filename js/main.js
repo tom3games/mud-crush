@@ -1,11 +1,11 @@
 // 入口: 画面の切り替え・入力・HUD・音・ループ。試合の中身は sim.js、CPU は cpu.js、絵は stage.js
 import * as THREE from 'three'
-import { createState, step, DT, BODIES, BUMPERS, TIRES, ENGINES, CAR_COLORS, GRACE } from './sim.js?v=5'
-import { EngineMix } from './engine.js?v=5'
-import { makeInputs } from './cpu.js?v=5'
-import { Stage } from './stage.js?v=5'
-import { loadAssets } from './assets.js?v=5'
-import { SAFE0, WORLD, POLES, BOXES, MUDS } from './arena.js?v=5'
+import { createState, step, DT, BODIES, BUMPERS, TIRES, ENGINES, CAR_COLORS, GRACE } from './sim.js?v=6'
+import { EngineMix } from './engine.js?v=6'
+import { makeInputs } from './cpu.js?v=6'
+import { Stage } from './stage.js?v=6'
+import { loadAssets } from './assets.js?v=6'
+import { SAFE0, WORLD, POLES, BOXES, MUDS } from './arena.js?v=6'
 
 const Q = new URLSearchParams(location.search)
 const $ = id => document.getElementById(id)

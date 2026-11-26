@@ -1,12 +1,12 @@
 // 画面: 採石場を組み、試合の状態(sim)を毎フレーム絵にする。出来事(events)から演出を出す
 import * as THREE from 'three'
-import { WORLD, SAFE0, POLES, BOXES, MUDS, H, mudAt } from './arena.js?v=5'
-import * as TX from './textures.js?v=5'
-import { Baker, rbox } from './models.js?v=5'
-import { buildTruck, wreckInto } from './trucks.js?v=5'
-import { assets } from './assets.js?v=5'
-import { Particles, Debris, Rings } from './fx.js?v=5'
-import { statsOf } from './sim.js?v=5'
+import { WORLD, SAFE0, POLES, BOXES, MUDS, H, mudAt } from './arena.js?v=6'
+import * as TX from './textures.js?v=6'
+import { Baker, rbox } from './models.js?v=6'
+import { buildTruck, wreckInto } from './trucks.js?v=6'
+import { assets } from './assets.js?v=6'
+import { Particles, Debris, Rings } from './fx.js?v=6'
+import { statsOf } from './sim.js?v=6'
 
 const clampN = (v, a, b) => v < a ? a : v > b ? b : v
 const lerp = (a, b, t) => a + (b - a) * t
@@ -50,7 +50,7 @@ export class Stage {
   }
   buildLights() {
     const s = this.scene
-    s.add(new THREE.HemisphereLight(0xe6cfa8, 0x4f3a28, 0.62))
+    s.add(new THREE.HemisphereLight(0xe8d2ac, 0x6a5038, 0.8))
     const sun = this.sun = new THREE.DirectionalLight(0xffd6a4, 2.25); sun.position.set(-48, 24, 34); sun.castShadow = true
     const ms = this.low ? 1024 : 2048; sun.shadow.mapSize.set(ms, ms); const sc = sun.shadow.camera; sc.left = -56; sc.right = 56; sc.top = 56; sc.bottom = -56; sc.near = 5; sc.far = 170; sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.1
     s.add(sun); s.add(sun.target)

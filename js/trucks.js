@@ -1,9 +1,9 @@
 // 車の絵: ダンプ・ゴミ収集車・改造バス。運転台とボンネットは横から見た輪郭を押し出して作り、斜めの窓・面取り・部品（灯り・格子・ミラー・泥よけ・タンク・リベット）を足す。
 // タイヤは実物のモデル（Poly Haven CC0）。前のバンパーは別の入れ物で、壊れたら外れて飛ぶ。泥の汚れは車ごとの uDirt で下から上へ付いていく
 import * as THREE from 'three'
-import { Baker, rbox } from './models.js?v=5'
-import { numberTexture, hazardTexture, grungeTexture, wornPaintTexture } from './textures.js?v=5'
-import { assets } from './assets.js?v=5'
+import { Baker, rbox } from './models.js?v=6'
+import { numberTexture, hazardTexture, grungeTexture, wornPaintTexture } from './textures.js?v=6'
+import { assets } from './assets.js?v=6'
 
 const box = (w, h, d) => new THREE.BoxGeometry(w, h, d)
 const cyl = (r0, r1, h, n = 12) => new THREE.CylinderGeometry(r0, r1, h, n)
@@ -19,7 +19,7 @@ function mats() {
   M.glass = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.06, metalness: 0.85, transparent: true, opacity: 0.88, envMapIntensity: 1.7 })
   M.lamp = new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false })
   M.hazard = new THREE.MeshStandardMaterial({ map: hazardTexture(), roughness: 0.7, metalness: 0.2 })
-  M.grunge = grungeTexture(); M.worn = wornPaintTexture()
+  M.grunge = grungeTexture(); M.worn = wornPaintTexture('flat'); M.wornEdge = wornPaintTexture('edge')
   return M
 }
 const mulb = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 }
@@ -166,7 +166,7 @@ export function buildTruck(car, num) {
   const bk = car.T.bump.id
   if (bk === 'plow') {
     // 厚い鉄の湾曲した排土板。V字の2枚。表は凹んだ曲面、縁は巻いた補強、溶接の筋・ボルト・刃先・油圧の腕
-    const wt = m.worn, plowMat = dirtify(new THREE.MeshStandardMaterial({ map: wt.map, bumpMap: wt.bump, bumpScale: 2.2, vertexColors: true, roughness: 0.62, metalness: 0.35, envMapIntensity: 0.5 }), dirtU)
+    const wt = m.worn, we = m.wornEdge, mk = t => dirtify(new THREE.MeshStandardMaterial({ map: t.map, bumpMap: t.bump, bumpScale: 1.4, vertexColors: true, roughness: 0.5, metalness: 0.3, envMapIntensity: 0.6 }), dirtU), plowMat = mk(wt), edgeMat = mk(we), bed = new Baker()
     const bpl = new Baker(), half = W / 2 + 0.1, wing = half * 0.97, th = -0.32
     const board = [[0.5, 0.5], [0.72, 0.62], [0.79, 0.95], [0.74, 1.35], [0.62, 1.7], [0.46, 1.98], [0.3, 2.05], [0.22, 1.95], [0.36, 1.72], [0.5, 1.4], [0.56, 1.0], [0.52, 0.72]]
     for (const sx of [-1, 1]) {
@@ -175,17 +175,21 @@ export function buildTruck(car, num) {
       const at = (lx, y, lz) => [cx + lx * cs + lz * sn, y, -lx * sn + lz * cs]
       const put = (geo, lx, y, lz, c, rx = 0, rz = 0) => { const [px, py, pz] = at(lx, y, lz); bpl.add(geo, px, py, pz, c, rx, ang, rz) }
       put(prof(board, wing, 0.05), 0, 0, 0, 0xffffff)                                   // 板（面取りした輪郭を押し出し）
-      put(cyl(0.11, 0.11, wing, 10), 0, 2.0, 0.28, 0x8a6a30, 0, Math.PI / 2)             // 上の縁の巻いた補強の筒
+      { const [px, py, pz] = at(0, 2.0, 0.28); bed.add(cyl(0.11, 0.11, wing, 10), px, py, pz, 0xffffff, 0, ang, Math.PI / 2) }             // 上の縁の巻いた補強の筒
       for (let i = 0; i < 4; i++) put(box(0.13, 1.5, 0.12), -wing * 0.42 + i * wing * 0.28, 1.3, 0.38, 0x7a7e80)   // 裏の補強の柱
       for (const [y, z] of [[0.95, 0.79], [1.62, 0.65]]) for (let i = 0; i < 6; i++) put(cyl(0.07, 0.07, 0.06, 6), -wing * 0.4 + i * wing * 0.16, y, z + 0.02, 0x4a4a46, Math.PI / 2)   // ボルトの頭
       for (const [y, z] of [[1.3, 0.77]]) put(cyl(0.035, 0.035, wing * 0.96, 6), 0, y, z + 0.03, 0x2a2622, 0, Math.PI / 2)       // 溶接の筋
-      put(box(wing, 0.13, 0.2), 0, 0.5, 0.64, 0x9a9c9a)                                 // 刃先（地金の鉄）
-      put(box(0.06, 1.2, 0.5), sx * -wing * 0.5, 1.1, 0.5, 0x6a6e70)                    // 端の板
+      { const [px, py, pz] = at(0, 0.5, 0.64); bed.add(box(wing, 0.13, 0.2), px, py, pz, 0x9a9c9a, 0, ang, 0) }                                 // 刃先（地金の鉄）
+      { const [px, py, pz] = at(sx * -wing * 0.5, 1.1, 0.5); bed.add(box(0.06, 1.2, 0.5), px, py, pz, 0xb0a898, 0, ang, 0) }                    // 端の板
       const hz = new THREE.Mesh(new THREE.PlaneGeometry(wing * 0.96, 0.26), m.hazard); const [hx, hy, hzz] = at(0, 0.82, 0.83); hz.position.set(hx, hy, hzz); hz.rotation.set(-0.16, ang, 0); hazards.push(hz)
     }
-    bpl.add(box(1.3, 1.0, 0.7), 0, 1.45, 0.1, 0xd8c8b0); bpl.add(box(1.5, 0.2, 0.9), 0, 0.85, 0.2, 0xb8a890)      // 中央の台座
+    bpl.add(box(1.3, 1.0, 0.7), 0, 1.45, 0.1, 0xe8d8c0); bpl.add(box(1.5, 0.2, 0.9), 0, 0.85, 0.2, 0xc8b8a0)      // 中央の台座
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) bsteel(box(0.1, 1.04, 0.1), sx * 0.64, 1.45, 0.1 + sz * 0.34, 0x6a6e70)   // 台座の角の山形鋼
+    bsteel(box(1.4, 0.1, 0.1), 0, 1.97, 0.44, 0x6a6e70); bsteel(box(1.4, 0.1, 0.1), 0, 0.95, 0.46, 0x6a6e70)
+    for (let i = -3; i <= 3; i++) bsteel(cyl(0.05, 0.05, 0.06, 6), i * 0.2, 1.97, 0.5, 0x3a3a38, Math.PI / 2)
     for (const sx of [-1, 1]) { bpl.add(cyl(0.09, 0.09, 1.3, 8), sx * 0.85, 1.25, -0.2, 0x9a9d9a, 0.75); bpl.add(cyl(0.13, 0.13, 0.5, 8), sx * 0.85, 1.0, -0.6, 0x3a3a3a, 0.75) }   // 油圧の腕
     const pm = bpl.mesh(plowMat, true); if (pm) bump.add(pm)
+    const pe = bed.mesh(edgeMat, true); if (pe) bump.add(pe)
   } else if (bk === 'spike') {
     bsteel(box(W + 0.1, 0.45, 0.4), 0, 1.0, 0.2, DSTEEL); bsteel(box(W + 0.1, 0.4, 0.4), 0, 2.15, 0.2, DSTEEL); bsteel(box(0.4, 1.4, 0.4), 0.0, 1.6, 0.15, DSTEEL)
     for (let i = -3; i <= 3; i++) for (const y of [1.05, 2.15]) bsteel(cyl(0.0, 0.17, 0.95, 7), i * 0.45, y, 0.9, 0xb8b4aa, Math.PI / 2)
