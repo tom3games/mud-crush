@@ -10,3 +10,6 @@
 - 慣性（本人の指摘・2026-11-26）: アクセルを離した時の減速を大型車に寄せた。tools/coast.mjs で測定。離す時 ダンプ55km/h→半分まで2.0秒・止まるまで4.2秒・32m、ゴミ収集車63km/h→半分2.2秒・3.3秒・32m、バス74km/h→半分1.2秒・2.3秒・24m
 - CPU 戦（tools/hsim.mjs 40試合）: 平均 約88秒・未決着0・転覆 平均1.4・最大静止 6.5秒
 - tools/simtest.mjs: 部位の壊れ方・ニトロ・転覆の点・同時全滅・場外・再現性 13項目
+- 検査: tools/verify.mjs（Chromium・WebKit 36項目 全部OK: 5サイズの全画面が一画面・整備→試合→結果・キーとタッチ・ニトロ連打・一時停止・CPU戦の通し・エラー0）、tools/simtest.mjs 13項目、live.mjs（公開版 Chromium/WebKit エラー0・og 200・GitHub に個人名なし）
+- 公開: https://tom3games.github.io/mud-crush/?v=1（Pages built）。横丁（tom3games.com）への登録は未（portal の6か所＋検査15〜20分＋デプロイはメインで）
+- 未検証: iOS シミュレーターでの人としての通し・実機のスマホの動き・耳での音の聞こえ方
