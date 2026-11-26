@@ -1,9 +1,9 @@
 // 車の絵: ダンプ・ゴミ収集車・改造バス。運転台とボンネットは横から見た輪郭を押し出して作り、斜めの窓・面取り・部品（灯り・格子・ミラー・泥よけ・タンク・リベット）を足す。
 // タイヤは実物のモデル（Poly Haven CC0）。前のバンパーは別の入れ物で、壊れたら外れて飛ぶ。泥の汚れは車ごとの uDirt で下から上へ付いていく
 import * as THREE from 'three'
-import { Baker, rbox } from './models.js?v=2'
-import { numberTexture, hazardTexture, grungeTexture } from './textures.js?v=2'
-import { assets } from './assets.js?v=2'
+import { Baker, rbox } from './models.js?v=3'
+import { numberTexture, hazardTexture, grungeTexture, wornPaintTexture } from './textures.js?v=3'
+import { assets } from './assets.js?v=3'
 
 const box = (w, h, d) => new THREE.BoxGeometry(w, h, d)
 const cyl = (r0, r1, h, n = 12) => new THREE.CylinderGeometry(r0, r1, h, n)
@@ -16,10 +16,10 @@ export function prof(pts, w, b = 0.05) {
 const M = {}
 function mats() {
   if (M.glass) return M
-  M.glass = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.1, metalness: 0.5, transparent: true, opacity: 0.82 })
+  M.glass = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.06, metalness: 0.85, transparent: true, opacity: 0.88, envMapIntensity: 1.7 })
   M.lamp = new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false })
   M.hazard = new THREE.MeshStandardMaterial({ map: hazardTexture(), roughness: 0.7, metalness: 0.2 })
-  M.grunge = grungeTexture()
+  M.grunge = grungeTexture(); M.worn = wornPaintTexture()
   return M
 }
 const mulb = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 }
@@ -63,6 +63,7 @@ export function buildTruck(car, num) {
     const g = new THREE.Group(); g.position.set(x, y, z)
     const mesh = tyreMesh(r, dual ? wd * 2.15 : wd); g.add(mesh); tilt.add(g); wheels.push({ g, mesh, front, r })
     const ox = Math.sign(x) * wd * (dual ? 1.1 : 0.5) * 0.9
+    if (dual) { body(box(wd * 2.2 + 0.3, 0.12, r * 2.25), x, 2 * r + 0.07, z, col); body(box(0.1, 0.34, r * 2.1), x + Math.sign(x) * (wd * 1.1 + 0.12), 2 * r - 0.06, z, col) }   // 後ろのタイヤの上の泥よけ（タイヤハウスの屋根と外側の縁）
     steel(cyl(r * 0.58, r * 0.58, 0.06, 18), x + ox, y, z, 0x4a3a2c, 0, 0, Math.PI / 2)
     steel(cyl(r * 0.2, r * 0.2, 0.12, 8), x + ox * 1.05, y, z, 0x2a2a2a, 0, 0, Math.PI / 2)
     for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283; steel(cyl(0.035, 0.035, 0.1, 6), x + ox * 1.06, y + Math.sin(a) * r * 0.36, z + Math.cos(a) * r * 0.36, 0x8a8a84, 0, 0, Math.PI / 2) }
@@ -95,8 +96,8 @@ export function buildTruck(car, num) {
     for (let i = 0; i < 6; i++) plate(0.6 + R() * 0.8, 0.5 + R() * 0.8, 0.05, (R() < 0.5 ? 1 : -1) * 1.54, 2.1 + R() * 0.9, -3.2 + R() * 2.2, Math.PI / 2)
     for (const sx of [-1, 1]) { door(sx, 1.36, 1.6, 2.9, -0.3, 0.9); mirror(sx, 2.85, 0.95); steel(box(0.35, 0.08, 0.5), sx * 1.5, 1.05, 0.3, DSTEEL); steel(box(0.35, 0.08, 0.5), sx * 1.5, 1.3, 0.3, DSTEEL)
       steel(cyl(0.34, 0.34, 1.2, 12), sx * 1.28, 0.95, -0.9, 0x6a6a64, Math.PI / 2); mudflap(sx * 1.62, 0.5, -3.7); mudflap(sx * 1.62, 0.55, 1.1, 0.8, 0.6) }
-    for (const sx of [-1, 1]) bg.add(box(0.05, 0.75, 1.0), sx * 1.38, 2.7, 0.3, 0x1a2128)
-    bg.add(prof([[0.7, 3.0], [1.12, 2.5], [1.14, 2.5], [0.72, 3.0]], 2.5, 0.01), 0, 0, 0, 0x1a2128)
+    for (const sx of [-1, 1]) bg.add(box(0.05, 0.75, 1.0), sx * 1.38, 2.7, 0.3, 0x24313a)
+    bg.add(prof([[0.7, 3.0], [1.12, 2.5], [1.14, 2.5], [0.72, 3.0]], 2.5, 0.01), 0, 0, 0, 0x24313a)
     steel(box(1.3, 0.5, 0.06), 0, 1.6, 2.58, 0x222222); for (let i = -4; i <= 4; i++) steel(box(0.05, 0.42, 0.09), i * 0.15, 1.6, 2.62, CHROME)
     for (const sx of [-1, 1]) { steel(box(0.5, 0.32, 0.14), sx * 1.06, 1.52, 2.56, 0x1d1d1d); lamp(0.38, 0.2, sx * 1.06, 1.52, 2.64) }
     for (let i = -2; i <= 2; i++) lamp(0.3, 0.2, i * 0.4, 3.3, 0.1)
@@ -117,8 +118,8 @@ export function buildTruck(car, num) {
     for (let i = 0; i < 6; i++) plate(0.6 + R() * 0.9, 0.5 + R() * 0.9, 0.05, (R() < 0.5 ? 1 : -1) * 1.4, 1.9 + R() * 1.6, -1.8 + (R() - 0.5) * 2.4, Math.PI / 2)
     for (const sx of [-1, 1]) { rivets(sx * 1.38, 3.1, -3.1, -0.5, 10); door(sx, 1.27, 1.55, 2.75, -0.1, 0.9); mirror(sx, 2.8, 0.9); steel(box(0.3, 0.08, 0.45), sx * 1.38, 1.05, 0.35, DSTEEL); steel(cyl(0.3, 0.3, 1.0, 12), sx * 1.15, 0.95, -0.9, 0x6a6a64, Math.PI / 2); mudflap(sx * 1.5, 0.5, -3.2, 0.7, 0.6) }
     steel(cyl(0.18, 0.18, 0.3, 10), 0, 3.95, -1.8, 0xe0a020)
-    for (const sx of [-1, 1]) bg.add(box(0.05, 0.7, 1.0), sx * 1.27, 2.55, 0.3, 0x1a2128)
-    bg.add(prof([[0.62, 2.95], [1.0, 2.45], [1.02, 2.45], [0.64, 2.95]], 2.3, 0.01), 0, 0, 0, 0x1a2128)
+    for (const sx of [-1, 1]) bg.add(box(0.05, 0.7, 1.0), sx * 1.27, 2.55, 0.3, 0x24313a)
+    bg.add(prof([[0.62, 2.95], [1.0, 2.45], [1.02, 2.45], [0.64, 2.95]], 2.3, 0.01), 0, 0, 0, 0x24313a)
     steel(box(1.2, 0.5, 0.06), 0, 1.6, 2.43, 0x222222); for (let i = -3; i <= 3; i++) steel(box(0.05, 0.42, 0.09), i * 0.17, 1.6, 2.47, CHROME)
     for (const sx of [-1, 1]) { steel(box(0.46, 0.3, 0.14), sx * 1.0, 1.52, 2.4, 0x1d1d1d); lamp(0.34, 0.18, sx * 1.0, 1.52, 2.48) }
     for (let i = -2; i <= 2; i++) lamp(0.26, 0.18, i * 0.38, 3.1, 0.12)
@@ -133,8 +134,8 @@ export function buildTruck(car, num) {
     body(prof([[2.35, 1.25], [2.35, 2.3], [3.0, 2.48], [3.43, 2.1], [3.45, 1.25]], 2.6, 0.06), 0, 0, 0, col)
     plate(2.5, 0.9, 0.08, 0, 1.85, 3.46, 0, -0.35); plate(2.7, 0.1, 1.0, 0, 2.5, 2.95)
     for (let i = 0; i < 6; i++) steel(box(0.08, 0.08, 0.7), -1.1 + i * 0.44, 2.58, 3.0, STEEL)
-    for (const sx of [-1, 1]) for (let i = 0; i < 5; i++) { bg.add(box(0.05, 0.7, 0.9), sx * 1.36, 2.85, 1.7 - i * 1.2, 0x1a2128); for (let b = 0; b < 3; b++) steel(box(0.06, 0.76, 0.06), sx * 1.4, 2.85, 1.45 - i * 1.2 + b * 0.25, STEEL) }
-    bg.add(box(2.4, 0.9, 0.05), 0, 3.0, 2.43, 0x1a2128); for (let i = -3; i <= 3; i++) steel(box(0.06, 0.95, 0.07), i * 0.33, 3.0, 2.47, STEEL)
+    for (const sx of [-1, 1]) for (let i = 0; i < 5; i++) { bg.add(box(0.05, 0.7, 0.9), sx * 1.36, 2.85, 1.7 - i * 1.2, 0x24313a); for (let b = 0; b < 3; b++) steel(box(0.06, 0.76, 0.06), sx * 1.4, 2.85, 1.45 - i * 1.2 + b * 0.25, STEEL) }
+    bg.add(box(2.4, 0.9, 0.05), 0, 3.0, 2.43, 0x24313a); for (let i = -3; i <= 3; i++) steel(box(0.06, 0.95, 0.07), i * 0.33, 3.0, 2.47, STEEL)
     for (let i = 0; i < 8; i++) plate(0.5 + R() * 1.3, 0.35 + R() * 0.5, 0.05, (R() < 0.5 ? 1 : -1) * 1.38, 1.6 + R() * 0.5, -3 + R() * 5, Math.PI / 2)
     for (const sx of [-1, 1]) { rivets(sx * 1.38, 1.5, -3.9, 2.2, 14); rivets(sx * 1.38, 3.3, -3.9, 2.2, 14); mirror(sx, 2.7, 2.3); mudflap(sx * 1.5, 0.45, -3.9, 0.7, 0.6) }
     for (let i = 0; i < 5; i++) steel(box(0.1, 0.1, 6), -1.0 + i * 0.5, 3.55, -0.8, STEEL)
@@ -164,14 +165,27 @@ export function buildTruck(car, num) {
   const bsteel = (g, x, y, z, c = STEEL, rx = 0, ry = 0, rz = 0) => bsb.add(g, x, y, z, tone(c, R, 0.12), rx, ry, rz)
   const bk = car.T.bump.id
   if (bk === 'plow') {
-    const half = W / 2 + 0.1
+    // 厚い鉄の湾曲した排土板。V字の2枚。表は凹んだ曲面、縁は巻いた補強、溶接の筋・ボルト・刃先・油圧の腕
+    const wt = m.worn, plowMat = dirtify(new THREE.MeshStandardMaterial({ map: wt.map, bumpMap: wt.bump, bumpScale: 2.2, vertexColors: true, roughness: 0.62, metalness: 0.35, envMapIntensity: 0.5 }), dirtU)
+    const bpl = new Baker(), half = W / 2 + 0.1, wing = half * 0.97, th = -0.32
+    const board = [[0.5, 0.5], [0.72, 0.62], [0.79, 0.95], [0.74, 1.35], [0.62, 1.7], [0.46, 1.98], [0.3, 2.05], [0.22, 1.95], [0.36, 1.72], [0.5, 1.4], [0.56, 1.0], [0.52, 0.72]]
     for (const sx of [-1, 1]) {
-      bpaint(box(half + 0.05, 1.2, 0.13), sx * half * 0.5, 1.3, 0.5, 0xc07818, -0.28, -sx * 0.32, 0)
-      bsteel(box(half + 0.05, 0.12, 0.5), sx * half * 0.5, 1.92, 0.45, 0x8a8e90, 0, -sx * 0.32, 0)
-      for (let i = 0; i < 4; i++) bsteel(box(0.06, 1.3, 0.2), sx * (0.3 + i * 0.38), 1.3, 0.46, 0x5a5e62, -0.28, -sx * 0.32, 0)
-      const hz = new THREE.Mesh(new THREE.PlaneGeometry(half, 0.28), m.hazard); hz.position.set(sx * half * 0.5, 0.78, 0.7); hz.rotation.set(-0.28, -sx * 0.32, 0); hazards.push(hz)
+      const ang = sx * th, cs = Math.cos(ang), sn = Math.sin(ang), cx = sx * wing * 0.5
+      // 板に沿った位置（局所の x, y, z）→ 世界の位置。局所は板の面が z 向き
+      const at = (lx, y, lz) => [cx + lx * cs + lz * sn, y, -lx * sn + lz * cs]
+      const put = (geo, lx, y, lz, c, rx = 0, rz = 0) => { const [px, py, pz] = at(lx, y, lz); bpl.add(geo, px, py, pz, c, rx, ang, rz) }
+      put(prof(board, wing, 0.05), 0, 0, 0, 0xffffff)                                   // 板（面取りした輪郭を押し出し）
+      put(cyl(0.11, 0.11, wing, 10), 0, 2.0, 0.28, 0x8a6a30, 0, Math.PI / 2)             // 上の縁の巻いた補強の筒
+      for (let i = 0; i < 4; i++) put(box(0.13, 1.5, 0.12), -wing * 0.42 + i * wing * 0.28, 1.3, 0.38, 0x7a7e80)   // 裏の補強の柱
+      for (const [y, z] of [[0.95, 0.79], [1.62, 0.65]]) for (let i = 0; i < 6; i++) put(cyl(0.07, 0.07, 0.06, 6), -wing * 0.4 + i * wing * 0.16, y, z + 0.02, 0x4a4a46, Math.PI / 2)   // ボルトの頭
+      for (const [y, z] of [[1.3, 0.77]]) put(cyl(0.035, 0.035, wing * 0.96, 6), 0, y, z + 0.03, 0x2a2622, 0, Math.PI / 2)       // 溶接の筋
+      put(box(wing, 0.13, 0.2), 0, 0.5, 0.64, 0x9a9c9a)                                 // 刃先（地金の鉄）
+      put(box(0.06, 1.2, 0.5), sx * -wing * 0.5, 1.1, 0.5, 0x6a6e70)                    // 端の板
+      const hz = new THREE.Mesh(new THREE.PlaneGeometry(wing * 0.96, 0.26), m.hazard); const [hx, hy, hzz] = at(0, 0.82, 0.83); hz.position.set(hx, hy, hzz); hz.rotation.set(-0.16, ang, 0); hazards.push(hz)
     }
-    bsteel(box(1.0, 0.9, 0.5), 0, 1.45, 0.15, DSTEEL); bsteel(cyl(0.08, 0.08, 1.2, 8), 0.8, 1.7, 0.0, CHROME, 0.9); bsteel(cyl(0.08, 0.08, 1.2, 8), -0.8, 1.7, 0.0, CHROME, 0.9)
+    bpl.add(box(1.3, 1.0, 0.7), 0, 1.45, 0.1, 0x5a5e62); bpl.add(box(1.5, 0.2, 0.9), 0, 0.85, 0.2, 0x4a4e52)      // 中央の台座
+    for (const sx of [-1, 1]) { bpl.add(cyl(0.09, 0.09, 1.3, 8), sx * 0.85, 1.25, -0.2, 0x9a9d9a, 0.75); bpl.add(cyl(0.13, 0.13, 0.5, 8), sx * 0.85, 1.0, -0.6, 0x3a3a3a, 0.75) }   // 油圧の腕
+    const pm = bpl.mesh(plowMat, true); if (pm) bump.add(pm)
   } else if (bk === 'spike') {
     bsteel(box(W + 0.1, 0.45, 0.4), 0, 1.0, 0.2, DSTEEL); bsteel(box(W + 0.1, 0.4, 0.4), 0, 2.15, 0.2, DSTEEL); bsteel(box(0.4, 1.4, 0.4), 0.0, 1.6, 0.15, DSTEEL)
     for (let i = -3; i <= 3; i++) for (const y of [1.05, 2.15]) bsteel(cyl(0.0, 0.17, 0.95, 7), i * 0.45, y, 0.9, 0xb8b4aa, Math.PI / 2)
@@ -189,10 +203,15 @@ export function buildTruck(car, num) {
   for (const h of hazards) bump.add(h)
   return { root, tilt, wheels, bump, parts, bodyMat, steelMat, dirtU, smoke, eye: { y: view.y, z: view.z }, W, fz, bumpKind: bk }
 }
-// 廃車置き場用の車の抜け殻（窓は黒く、タイヤは無い）。bj に車体、bg に窓を足す。ang は向き（y 回り）
+// 廃車置き場用の車の抜け殻（輪郭を押し出して面取り・ホイールハウス・割れた窓・バンパー）。bj に車体、bg に窓とホイールハウスの暗い面を足す。ang は向き（y 回り）
 export function wreckInto(bj, bg, x, y, z, ang, col, R, tilt = 0) {
-  const c = tone(col, R, 0.3)
-  bj.add(prof([[-2.1, 0], [-2.1, 0.95], [-1.9, 1.1], [1.9, 1.05], [2.15, 0.7], [2.15, 0]], 2.0, 0.07), x, y, z, c, 0, ang, tilt)
-  bj.add(prof([[-1.3, 1.0], [-1.0, 1.7], [0.5, 1.7], [1.0, 1.05]], 1.8, 0.06), x, y, z, tone(col, R, 0.5), 0, ang, tilt)
-  bg.add(box(1.7, 0.55, 1.3), x, y + 1.35, z, 0x0c0d0e, 0, ang, tilt)
+  const c = tone(col, R, 0.35), s = Math.sin(ang), co = Math.cos(ang)
+  const at = (lx, ly, lz) => [x + lx * co + lz * s, y + ly, z - lx * s + lz * co]      // 車の局所 → 世界（傾きは無視した近似）
+  bj.add(prof([[-2.15, 0.15], [-2.15, 0.9], [-1.95, 1.08], [-0.9, 1.1], [-0.4, 1.12], [1.1, 1.08], [1.95, 0.98], [2.2, 0.62], [2.2, 0.15]], 2.0, 0.07), x, y + 0.1, z, c, 0, ang, tilt)
+  bj.add(prof([[-1.35, 1.1], [-1.05, 1.78], [0.45, 1.8], [1.0, 1.12]], 1.78, 0.06), x, y + 0.1, z, tone(col, R, 0.55), 0, ang, tilt)
+  const gl = (w, h, d, lx, ly, lz) => { const [px, py, pz] = at(lx, ly, lz); bg.add(box(w, h, d), px, py, pz, 0x15191c, 0, ang, tilt) }
+  gl(1.62, 0.5, 0.05, 0, 1.55, 0.74); gl(1.62, 0.5, 0.05, 0, 1.5, -1.02); gl(0.05, 0.4, 1.0, 0.9, 1.52, -0.2); gl(0.05, 0.4, 1.0, -0.9, 1.52, -0.2)   // 窓
+  for (const sx of [-1, 1]) for (const lz of [-1.35, 1.4]) { const [px, py, pz] = at(sx * 1.01, 0.62, lz); bg.add(cyl(0.5, 0.5, 0.06, 14), px, py, pz, 0x0d0d0d, 0, ang, Math.PI / 2 + tilt); bj.add(cyl(0.26, 0.26, 0.08, 10), px + sx * 0.02 * co, py, pz - sx * 0.02 * s, 0x6a5a48, 0, ang, Math.PI / 2 + tilt) }   // ホイールハウスとむき出しのホイール
+  { const [px, py, pz] = at(0, 0.38, 2.22); bj.add(box(2.1, 0.16, 0.2), px, py, pz, 0x6a6a66, 0, ang, tilt) }
+  { const [px, py, pz] = at(0, 0.4, -2.18); bj.add(box(2.1, 0.16, 0.2), px, py, pz, 0x6a6a66, 0, ang, tilt) }
 }

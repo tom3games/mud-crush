@@ -1,12 +1,12 @@
 // 画面: 採石場を組み、試合の状態(sim)を毎フレーム絵にする。出来事(events)から演出を出す
 import * as THREE from 'three'
-import { WORLD, SAFE0, POLES, BOXES, MUDS, H, mudAt } from './arena.js?v=2'
-import * as TX from './textures.js?v=2'
-import { Baker, rbox } from './models.js?v=2'
-import { buildTruck, wreckInto } from './trucks.js?v=2'
-import { assets } from './assets.js?v=2'
-import { Particles, Debris, Rings } from './fx.js?v=2'
-import { statsOf } from './sim.js?v=2'
+import { WORLD, SAFE0, POLES, BOXES, MUDS, H, mudAt } from './arena.js?v=3'
+import * as TX from './textures.js?v=3'
+import { Baker, rbox } from './models.js?v=3'
+import { buildTruck, wreckInto } from './trucks.js?v=3'
+import { assets } from './assets.js?v=3'
+import { Particles, Debris, Rings } from './fx.js?v=3'
+import { statsOf } from './sim.js?v=3'
 
 const clampN = (v, a, b) => v < a ? a : v > b ? b : v
 const lerp = (a, b, t) => a + (b - a) * t
@@ -68,7 +68,7 @@ export class Stage {
     for (let j = 0; j < n - 1; j++) for (let i = 0; i < n - 1; i++) { const a = j * n + i, b = a + 1, c = a + n, d = c + 1; idx.push(a, c, b, b, c, d) }
     const g = this.groundGeo = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals()
     const gt = TX.groundTextures(this.low ? 1536 : 2048, aniso), det = TX.detailTexture(aniso)
-    const fm = new THREE.MeshStandardMaterial({ map: gt.map, bumpMap: gt.map, bumpScale: 1.6, roughnessMap: gt.rough, roughness: 1, metalness: 0.0, envMapIntensity: 0.9 })
+    const fm = new THREE.MeshStandardMaterial({ map: gt.map, bumpMap: gt.bump, bumpScale: 1.7, roughnessMap: gt.rough, roughness: 1, metalness: 0.0, envMapIntensity: 0.9 })
     fm.onBeforeCompile = sh => {
       sh.uniforms.uDetail = { value: det }
       sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vWP;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvWP = position.xz;')
@@ -102,15 +102,7 @@ export class Stage {
     const wall = new THREE.Mesh(rg, rockM); wall.receiveShadow = true; S.add(wall)
     // 壁の上の外: 遠くの山
     
-    // 外の岩壁の上の重機（遠景）: 掘削機の影
-    const ex = new Baker()
-    for (const [a, h] of [[0.9, 34], [3.5, 30]]) {
-      const x = Math.sin(a) * (WORLD + 14), z = Math.cos(a) * (WORLD + 14), y = h
-      ex.add(new THREE.BoxGeometry(7, 1.6, 4), x, y + 0.8, z, 0x3a3a3a, 0, a)
-      ex.add(new THREE.BoxGeometry(4, 3, 4), x, y + 3.1, z, 0xb7861f, 0, a)
-      ex.add(new THREE.BoxGeometry(1.0, 1.0, 12), x + Math.sin(a + Math.PI) * 7, y + 6, z + Math.cos(a + Math.PI) * 7, 0xb7861f, -0.5, a)
-    }
-    const em = ex.mesh(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8 }), false); if (em) S.add(em)
+
   }
   // 岩・タイヤの山・廃車の積み重ね（実物のモデルを読んだあとに置く）
   buildProps() {
@@ -128,14 +120,14 @@ export class Stage {
     }
     // 積み上げた廃車
     const bJ = new Baker(), bG = new Baker(), cols = [0x6a4028, 0x4a5258, 0x5e3328, 0x586240, 0x7a6a34, 0x34445a], R = () => rr()
-    const jm = new THREE.MeshStandardMaterial({ map: TX.grungeTexture(), vertexColors: true, roughness: 0.85, metalness: 0.3 })
+    const jm = new THREE.MeshStandardMaterial({ map: TX.grungeTexture(), vertexColors: true, color: 0x8a7a6c, roughness: 0.9, metalness: 0.25 })
     for (const o of BOXES) {
       const along = o.w > o.d, ang = along ? Math.PI / 2 : 0, ci = o.a * 2
       const lay = (y, c, dx, tl) => wreckInto(bJ, bG, o.x + (along ? 0 : dx), o.base + y, o.z + (along ? dx : 0), ang, c, R, tl)
       lay(0.05, cols[ci % 6], 0, 0); lay(1.25, cols[(ci + 1) % 6], 0.18, 0.05); if (o.h > 2.8) lay(2.45, cols[(ci + 2) % 6], -0.2, -0.06)
       const L = along ? o.w : o.d; void L
     }
-    const jmesh = bJ.mesh(jm); if (jmesh) S.add(jmesh); const gmesh = bG.mesh(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.2, metalness: 0.5 }), false); if (gmesh) S.add(gmesh)
+    const jmesh = bJ.mesh(jm); if (jmesh) S.add(jmesh); const gmesh = bG.mesh(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.15, metalness: 0.7, envMapIntensity: 1.6 }), false); if (gmesh) S.add(gmesh)
   }
   // ---------------------------------------------------------------- 動くもの
   buildDynamic() {

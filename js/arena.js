@@ -21,7 +21,7 @@ export function mudAt(x, z) {
 export function H(x, z) {
   let h = 0
   for (const m of MOUNDS) { const d = Math.hypot(x - m.x, z - m.z); if (d < m.r) h += m.h * 0.5 * (1 + Math.cos(Math.PI * d / m.r)) }
-  for (const p of MUDS) { const d = Math.hypot(x - p.x, z - p.z); if (d < p.r) h -= p.pit * 0.5 * (1 + Math.cos(Math.PI * d / p.r)) }
+  for (const p of MUDS) { const d = Math.hypot(x - p.x, z - p.z); if (d < p.r) h -= p.pit * 0.5 * (1 + Math.cos(Math.PI * d / p.r)); if (d < p.r * 1.3) { const q = (d - p.r * 0.97) / (p.r * 0.075); h += (p.pit > 0.35 ? 0.34 : 0.2) * Math.exp(-q * q) } }   // 縁は押し出された泥で盛り上がる
   // 轍（わだち）のような細かい起伏。ごく浅い
   h += 0.07 * Math.sin(x * 0.31 + z * 0.17) * Math.cos(z * 0.23 - x * 0.09)
   return h
