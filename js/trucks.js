@@ -1,9 +1,9 @@
 // 車の絵: ダンプ・ゴミ収集車・改造バス。運転台とボンネットは横から見た輪郭を押し出して作り、斜めの窓・面取り・部品（灯り・格子・ミラー・泥よけ・タンク・リベット）を足す。
 // タイヤは実物のモデル（Poly Haven CC0）。前のバンパーは別の入れ物で、壊れたら外れて飛ぶ。泥の汚れは車ごとの uDirt で下から上へ付いていく
 import * as THREE from 'three'
-import { Baker, rbox } from './models.js?v=3'
-import { numberTexture, hazardTexture, grungeTexture, wornPaintTexture } from './textures.js?v=3'
-import { assets } from './assets.js?v=3'
+import { Baker, rbox } from './models.js?v=5'
+import { numberTexture, hazardTexture, grungeTexture, wornPaintTexture } from './textures.js?v=5'
+import { assets } from './assets.js?v=5'
 
 const box = (w, h, d) => new THREE.BoxGeometry(w, h, d)
 const cyl = (r0, r1, h, n = 12) => new THREE.CylinderGeometry(r0, r1, h, n)
@@ -83,7 +83,7 @@ export function buildTruck(car, num) {
     body(prof([[-0.45, 1.35], [-0.45, 3.1], [0.7, 3.15], [1.1, 2.45], [1.15, 1.35]], 2.7, 0.07), 0, 0, 0, col)
     body(prof([[1.1, 1.35], [1.1, 1.82], [1.6, 1.9], [2.3, 1.74], [2.5, 1.56], [2.58, 1.35]], 1.5, 0.06), 0, 0, 0, col)
     for (const sx of [-1, 1]) body(prof([[0.85, 1.35], [0.85, 1.72], [1.6, 1.76], [2.4, 1.64], [2.58, 1.45], [2.58, 1.35]], 0.62, 0.05), sx * 1.06, 0, 0, col)
-    for (let i = 0; i < 4; i++) steel(box(0.7, 0.03, 0.05), 0, 1.93, 1.4 + i * 0.18, 0x151515)
+    for (let i = 0; i < 4; i++) steel(box(0.6, 0.02, 0.04), 0, 1.93, 1.4 + i * 0.18, 0x4a3426)
     body(box(3.0, 0.3, 3.1), 0, 1.5, -2.0, col)
     body(box(0.24, 1.45, 3.1), 1.4, 2.2, -2.0, col); body(box(0.24, 1.45, 3.1), -1.4, 2.2, -2.0, col); body(box(3.0, 1.4, 0.24), 0, 2.2, -3.5, col)
     body(prof([[-0.7, 1.5], [-0.7, 4.0], [-0.35, 3.9], [0.3, 3.55], [0.3, 1.5]], 3.1, 0.06), 0, 0, 0, col)
@@ -110,7 +110,7 @@ export function buildTruck(car, num) {
     body(prof([[-0.3, 1.35], [-0.3, 3.0], [0.65, 3.05], [1.0, 2.4], [1.2, 1.35]], 2.5, 0.07), 0, 0, 0, col)
     body(prof([[1.2, 1.35], [1.2, 1.82], [1.7, 1.9], [2.2, 1.74], [2.38, 1.56], [2.45, 1.35]], 1.4, 0.06), 0, 0, 0, col)
     for (const sx of [-1, 1]) body(prof([[0.95, 1.35], [0.95, 1.7], [1.6, 1.74], [2.3, 1.64], [2.45, 1.45], [2.45, 1.35]], 0.6, 0.05), sx * 1.0, 0, 0, col)
-    for (let i = 0; i < 4; i++) steel(box(0.6, 0.03, 0.05), 0, 1.93, 1.4 + i * 0.17, 0x151515)
+    for (let i = 0; i < 4; i++) steel(box(0.5, 0.02, 0.04), 0, 1.93, 1.4 + i * 0.17, 0x4a3426)
     body(rbox(2.72, 2.4, 2.9, 0.4), 0, 1.45, -1.8, col)
     body(rbox(2.5, 0.9, 1.0, 0.2), 0, 1.15, -3.1, col)
     for (const sx of [-1, 1]) { steel(box(0.18, 0.18, 1.7), sx * 1.35, 3.2, -1.8, STEEL); for (let i = 0; i < 5; i++) steel(box(0.08, 1.9, 0.12), sx * 1.4, 2.5, -3.0 + i * 0.6, DSTEEL) }
@@ -183,7 +183,7 @@ export function buildTruck(car, num) {
       put(box(0.06, 1.2, 0.5), sx * -wing * 0.5, 1.1, 0.5, 0x6a6e70)                    // 端の板
       const hz = new THREE.Mesh(new THREE.PlaneGeometry(wing * 0.96, 0.26), m.hazard); const [hx, hy, hzz] = at(0, 0.82, 0.83); hz.position.set(hx, hy, hzz); hz.rotation.set(-0.16, ang, 0); hazards.push(hz)
     }
-    bpl.add(box(1.3, 1.0, 0.7), 0, 1.45, 0.1, 0x5a5e62); bpl.add(box(1.5, 0.2, 0.9), 0, 0.85, 0.2, 0x4a4e52)      // 中央の台座
+    bpl.add(box(1.3, 1.0, 0.7), 0, 1.45, 0.1, 0xd8c8b0); bpl.add(box(1.5, 0.2, 0.9), 0, 0.85, 0.2, 0xb8a890)      // 中央の台座
     for (const sx of [-1, 1]) { bpl.add(cyl(0.09, 0.09, 1.3, 8), sx * 0.85, 1.25, -0.2, 0x9a9d9a, 0.75); bpl.add(cyl(0.13, 0.13, 0.5, 8), sx * 0.85, 1.0, -0.6, 0x3a3a3a, 0.75) }   // 油圧の腕
     const pm = bpl.mesh(plowMat, true); if (pm) bump.add(pm)
   } else if (bk === 'spike') {

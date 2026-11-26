@@ -37,7 +37,7 @@ export async function loadAssets(onStep = () => {}) {
   for (const root of [r7, r9]) {
     const m = firstMesh(root); m.geometry = decimate(m.geometry, 7000); m.geometry.computeBoundingBox(); const b = m.geometry.boundingBox, s = new THREE.Vector3(); b.getSize(s)
     m.geometry.translate(-(b.min.x + b.max.x) / 2, -b.min.y, -(b.min.z + b.max.z) / 2)    // 底を y=0・真ん中を原点に
-    m.material.envMapIntensity = 0.5; A.rocks.push({ geo: m.geometry, mat: m.material, size: s })
+    m.material.envMapIntensity = 0.35; m.material.metalness = 0; m.material.metalnessMap = null; m.material.roughnessMap = null; m.material.roughness = 0.95; m.material.aoMap = null; m.material.color.setScalar(1.35); A.rocks.push({ geo: m.geometry, mat: m.material, size: s })
   }
   const t = firstMesh(ty); t.geometry = decimate(t.geometry, 1300); const g = t.geometry; g.computeBoundingBox(); const b = g.boundingBox, s = new THREE.Vector3(); b.getSize(s)
   // 一番薄い向きをタイヤの軸として X に合わせ、中心を原点・直径1にそろえる

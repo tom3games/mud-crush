@@ -1,12 +1,12 @@
 // 画面: 採石場を組み、試合の状態(sim)を毎フレーム絵にする。出来事(events)から演出を出す
 import * as THREE from 'three'
-import { WORLD, SAFE0, POLES, BOXES, MUDS, H, mudAt } from './arena.js?v=3'
-import * as TX from './textures.js?v=3'
-import { Baker, rbox } from './models.js?v=3'
-import { buildTruck, wreckInto } from './trucks.js?v=3'
-import { assets } from './assets.js?v=3'
-import { Particles, Debris, Rings } from './fx.js?v=3'
-import { statsOf } from './sim.js?v=3'
+import { WORLD, SAFE0, POLES, BOXES, MUDS, H, mudAt } from './arena.js?v=5'
+import * as TX from './textures.js?v=5'
+import { Baker, rbox } from './models.js?v=5'
+import { buildTruck, wreckInto } from './trucks.js?v=5'
+import { assets } from './assets.js?v=5'
+import { Particles, Debris, Rings } from './fx.js?v=5'
+import { statsOf } from './sim.js?v=5'
 
 const clampN = (v, a, b) => v < a ? a : v > b ? b : v
 const lerp = (a, b, t) => a + (b - a) * t
@@ -87,8 +87,8 @@ export class Stage {
     // 縮む輪のふち: 土ぼこりの壁
     const wallM = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false, uniforms: this.ringU,
       vertexShader: 'varying vec2 vUv; varying vec3 vW; void main(){ vUv = uv; vW = (modelMatrix * vec4(position,1.0)).xyz; gl_Position = projectionMatrix * viewMatrix * vec4(vW, 1.0); }',
-      fragmentShader: 'uniform float uT; varying vec2 vUv; varying vec3 vW; void main(){ float a = atan(vW.x, vW.z); float n = 0.5 + 0.5 * sin(a * 31.0 + uT * 1.4 + vUv.y * 5.0) * sin(a * 17.0 - uT * 0.8); float v = pow(1.0 - vUv.y, 1.6); gl_FragColor = vec4(vec3(0.78, 0.52, 0.25) + n * 0.1, v * (0.16 + n * 0.22)); }' })
-    this.ringWall = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 16, 96, 1, true), wallM); this.ringWall.position.y = 8; this.ringWall.renderOrder = 3; S.add(this.ringWall)
+      fragmentShader: 'uniform float uT; varying vec2 vUv; varying vec3 vW; void main(){ float a = atan(vW.x, vW.z); float n = 0.5 + 0.5 * sin(a * 31.0 + uT * 1.4 + vUv.y * 5.0) * sin(a * 17.0 - uT * 0.8); float v = pow(1.0 - vUv.y, 1.6); float near = smoothstep(6.0, 34.0, distance(vW, cameraPosition)); gl_FragColor = vec4(vec3(0.78, 0.52, 0.25) + n * 0.1, v * (0.16 + n * 0.22) * near); }' })
+    
     // 岩壁: 採石場の段（ベンチ）。壁と平らな段を交互に重ね、岩肌を凹凸にする。段は土ぼこりで明るく、壁は地層の縞
     const pr = [[WORLD + 3, -3]], seg = (r0, y0, r1, y1, n) => { for (let i = 1; i <= n; i++) pr.push([r0 + (r1 - r0) * i / n, y0 + (y1 - y0) * i / n]) }
     seg(WORLD + 3, -3, WORLD + 4.5, 9, 14); seg(WORLD + 4.5, 9, WORLD + 15, 9.8, 4); seg(WORLD + 15, 9.8, WORLD + 16.5, 23, 12); seg(WORLD + 16.5, 23, WORLD + 29, 23.8, 4); seg(WORLD + 29, 23.8, WORLD + 31, 42, 14); seg(WORLD + 31, 42, WORLD + 70, 48, 3)
@@ -170,7 +170,7 @@ export class Stage {
   // ---------------------------------------------------------------- 毎フレーム
   sync(S, alpha, dt, o = {}) {
     this.time += dt
-    this.ringU.uT.value = this.time; this.ringU.uR.value = S.safeR; this.ringWall.scale.set(S.safeR, 1, S.safeR); this.safeR = S.safeR
+    this.ringU.uT.value = this.time; this.ringU.uR.value = S.safeR; this.safeR = S.safeR
     const me = o.me
     for (const c of S.cars) {
       const v = this.viewOf(c), x = lerp(c.px, c.x, alpha), y = lerp(c.py, c.y, alpha), z = lerp(c.pz, c.z, alpha), yaw = lerpAng(c.pyaw, c.yaw, alpha)
@@ -195,7 +195,7 @@ export class Stage {
       if (!v.preview) this.effects(S, c, v, dt, x, y, z, yaw, sp)
     }
     this.ambT = (this.ambT || 0) - dt
-    if (this.ambT <= 0 && o.focus) { this.ambT = this.low ? 0.5 : 0.28; const a = Math.random() * 6.283, d = 6 + Math.random() * 55; this.pDust.emit(o.focus.x + Math.sin(a) * d, 0.8 + Math.random() * 2.5, o.focus.z + Math.cos(a) * d, 3.4, 0.1, 1.3, 9, 7, 15, 0xc9b08a, 0xd8c09a, 0.11, 0, 0) }
+    if (this.ambT <= 0 && o.focus) { this.ambT = this.low ? 0.5 : 0.28; const a = Math.random() * 6.283, d = 22 + Math.random() * 50; this.pDust.emit(o.focus.x + Math.sin(a) * d, 0.8 + Math.random() * 2.5, o.focus.z + Math.cos(a) * d, 3.4, 0.1, 1.3, 9, 7, 15, 0xc9b08a, 0xd8c09a, 0.11, 0, 0) }
     this.pDust.update(dt); this.pFire.update(dt); this.debris.update(dt); this.rings.update(dt)
     // 影を追う
     const fc = o.focus ? o.focus : { x: 0, z: 0 }

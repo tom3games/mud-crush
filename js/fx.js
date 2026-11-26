@@ -1,18 +1,18 @@
 // 粒（煙・火・火花・紙吹雪）、床と壁のペイントのしみ、飛んでいく部品、衝撃の輪
 import * as THREE from 'three'
-import { H } from './arena.js?v=3'
-import { splatTexture } from './textures.js?v=3'
+import { H } from './arena.js?v=5'
+import { splatTexture } from './textures.js?v=5'
 
 const VS = `
 attribute float aSize; attribute vec4 aColor; attribute float aShape;
-varying vec4 vC; varying float vS;
+varying vec4 vC; varying float vS; varying float vD;
 uniform float uScale;
-void main(){ vC=aColor; vS=aShape; vec4 mv=modelViewMatrix*vec4(position,1.0); gl_Position=projectionMatrix*mv; gl_PointSize=min(aSize*uScale/max(0.5,-mv.z), 150.0); }`
+void main(){ vC=aColor; vS=aShape; vec4 mv=modelViewMatrix*vec4(position,1.0); vD=-mv.z; gl_Position=projectionMatrix*mv; gl_PointSize=min(aSize*uScale/max(0.5,-mv.z), 110.0); }`
 const FS = `
-varying vec4 vC; varying float vS;
+varying vec4 vC; varying float vS; varying float vD;
 void main(){ vec2 p=gl_PointCoord-0.5; float a;
   if(vS>0.5){ a=step(max(abs(p.x),abs(p.y)),0.42); } else { float d=length(p)*2.0; a=smoothstep(1.0,0.35,d); }
-  if(vC.a*a<0.01) discard; gl_FragColor=vec4(vC.rgb, vC.a*a); }`
+  a*=smoothstep(2.0,9.0,vD); if(vC.a*a<0.01) discard; gl_FragColor=vec4(vC.rgb, vC.a*a); }`
 
 export class Particles {
   constructor(scene, max, additive, scale) {
