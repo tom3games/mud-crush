@@ -1,6 +1,6 @@
 // 絵はすべてその場で描く（画像ファイルなし）。採石場の土・泥・岩肌・空
 import * as THREE from 'three'
-import { WORLD, MUDS, MOUNDS } from './arena.js?v=1'
+import { WORLD, MUDS, MOUNDS } from './arena.js?v=2'
 
 function rnd(seed) { let a = seed; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 } }
 function canvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d')] }
@@ -16,7 +16,7 @@ const W2 = WORLD + 10
 export function groundTextures(size = 2048, aniso = 8) {
   const [c, g] = canvas(size, size), [rc, rg] = canvas(size, size), R = rnd(77)
   const k = size / (W2 * 2), P = (x, z) => [(x + W2) * k, (z + W2) * k]
-  g.fillStyle = '#7a5a3b'; g.fillRect(0, 0, size, size); rg.fillStyle = '#e8e8e8'; rg.fillRect(0, 0, size, size)
+  g.fillStyle = '#6c4e32'; g.fillRect(0, 0, size, size); rg.fillStyle = '#e8e8e8'; rg.fillRect(0, 0, size, size)
   // 土の大きなむら
   for (let i = 0; i < 2600; i++) { const x = R() * size, y = R() * size, r = 8 + R() * 70, v = R(); g.fillStyle = `rgba(${v < 0.5 ? '98,70,44' : '138,104,68'},${0.05 + R() * 0.1})`; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill() }
   // 乾いた明るい土のたまり
@@ -28,7 +28,7 @@ export function groundTextures(size = 2048, aniso = 8) {
   for (let i = 0; i < 26; i++) {
     const r0 = 14 + R() * 60, a0 = R() * 6.28, span = 0.8 + R() * 2.4, wd = 0.45 + R() * 0.35
     for (const off of [-1.15, 1.15]) {
-      g.strokeStyle = `rgba(52,36,24,${0.28 + R() * 0.2})`; g.lineWidth = wd * k; g.beginPath()
+      g.strokeStyle = `rgba(52,36,24,${0.2 + R() * 0.16})`; g.lineWidth = wd * k; g.beginPath()
       for (let s = 0; s <= 24; s++) { const a = a0 + span * s / 24, rr = r0 + off + Math.sin(a * 3 + i) * 0.8; const [x, y] = P(Math.sin(a) * rr, Math.cos(a) * rr); s ? g.lineTo(x, y) : g.moveTo(x, y) }
       g.stroke()
     }
@@ -45,12 +45,12 @@ export function groundTextures(size = 2048, aniso = 8) {
     for (let i = 0; i < 70; i++) {
       const a = R() * 6.28, d = Math.sqrt(R()) * m.r * 0.92, px = x + Math.sin(a) * d * k, py = y + Math.cos(a) * d * k, r = (1.2 + R() * 4.2) * k, f = 1 - d / m.r
       g.fillStyle = `rgba(${34 + R() * 12},${24 + R() * 8},${16},${0.35 + f * 0.5})`; g.beginPath(); g.arc(px, py, r, 0, 7); g.fill()
-      rg.fillStyle = `rgba(30,30,30,${0.4 + f * 0.5})`; g.globalAlpha = 1; rg.beginPath(); rg.arc(px, py, r, 0, 7); rg.fill()
+      rg.fillStyle = `rgba(185,185,185,${0.4 + f * 0.5})`; g.globalAlpha = 1; rg.beginPath(); rg.arc(px, py, r, 0, 7); rg.fill()
     }
     const gr = g.createRadialGradient(x, y, 0, x, y, m.r * k * 0.8); gr.addColorStop(0, 'rgba(30,20,13,0.82)'); gr.addColorStop(0.7, 'rgba(36,25,16,0.5)'); gr.addColorStop(1, 'rgba(36,25,16,0)'); g.fillStyle = gr; g.beginPath(); g.arc(x, y, m.r * k * 0.8, 0, 7); g.fill()
-    const gr2 = rg.createRadialGradient(x, y, 0, x, y, m.r * k * 0.8); gr2.addColorStop(0, 'rgba(26,26,26,0.95)'); gr2.addColorStop(0.7, 'rgba(60,60,60,0.7)'); gr2.addColorStop(1, 'rgba(60,60,60,0)'); rg.fillStyle = gr2; rg.beginPath(); rg.arc(x, y, m.r * k * 0.8, 0, 7); rg.fill()
+    const gr2 = rg.createRadialGradient(x, y, 0, x, y, m.r * k * 0.8); gr2.addColorStop(0, 'rgba(178,178,178,0.95)'); gr2.addColorStop(0.7, 'rgba(195,195,195,0.7)'); gr2.addColorStop(1, 'rgba(120,120,120,0)'); rg.fillStyle = gr2; rg.beginPath(); rg.arc(x, y, m.r * k * 0.8, 0, 7); rg.fill()
     // 泥の中の水たまり（空を映す）
-    for (let i = 0; i < 6; i++) { const a = R() * 6.28, d = R() * m.r * 0.55, px = x + Math.sin(a) * d * k, py = y + Math.cos(a) * d * k, r = (0.8 + R() * 2.2) * k; rg.fillStyle = 'rgba(8,8,8,0.9)'; rg.beginPath(); rg.ellipse(px, py, r, r * 0.6, R() * 3, 0, 7); rg.fill(); g.fillStyle = 'rgba(70,56,44,0.55)'; g.beginPath(); g.ellipse(px, py, r, r * 0.6, R() * 3, 0, 7); g.fill() }
+    for (let i = 0; i < 6; i++) { const a = R() * 6.28, d = R() * m.r * 0.55, px = x + Math.sin(a) * d * k, py = y + Math.cos(a) * d * k, r = (0.8 + R() * 2.2) * k; rg.fillStyle = 'rgba(150,150,150,0.9)'; rg.beginPath(); rg.ellipse(px, py, r, r * 0.6, R() * 3, 0, 7); rg.fill(); g.fillStyle = 'rgba(70,56,44,0.55)'; g.beginPath(); g.ellipse(px, py, r, r * 0.6, R() * 3, 0, 7); g.fill() }
   }
   return { map: tex(c, true, aniso, false), rough: tex(rc, false, aniso, false) }
 }
@@ -76,10 +76,13 @@ export function rockTexture(aniso = 8) {
 }
 // 空: 夕方の土ぼこりで黄ばんだ空と、低い太陽
 export function skyTexture() {
-  const [c, g] = canvas(1024, 512)
-  const gr = g.createLinearGradient(0, 0, 0, 512); gr.addColorStop(0, '#5c7592'); gr.addColorStop(0.45, '#c9a77c'); gr.addColorStop(0.52, '#e0b27a'); gr.addColorStop(1, '#9b7a55'); g.fillStyle = gr; g.fillRect(0, 0, 1024, 512)
-  const sg = g.createRadialGradient(300, 250, 4, 300, 250, 160); sg.addColorStop(0, 'rgba(255,248,226,1)'); sg.addColorStop(0.1, 'rgba(255,224,160,0.95)'); sg.addColorStop(1, 'rgba(255,190,110,0)'); g.fillStyle = sg; g.fillRect(0, 0, 1024, 512)
-  const R = rnd(4); for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(255,236,210,${0.04 + R() * 0.07})`; g.beginPath(); g.ellipse(R() * 1024, 80 + R() * 170, 60 + R() * 150, 6 + R() * 16, 0, 0, 7); g.fill() }
+  const [c, g] = canvas(1024, 512), R = rnd(4)
+  const gr = g.createLinearGradient(0, 0, 0, 512); gr.addColorStop(0, '#3d5d86'); gr.addColorStop(0.22, '#6f86a0'); gr.addColorStop(0.38, '#c2a47c'); gr.addColorStop(0.47, '#d9b184'); gr.addColorStop(0.5, '#c9a67c'); gr.addColorStop(1, '#8a6a48'); g.fillStyle = gr; g.fillRect(0, 0, 1024, 512)
+  // 薄い雲の筋と、土ぼこりの層
+  for (let i = 0; i < 70; i++) { const y = 40 + R() * 190, w = 80 + R() * 260; const gg = g.createLinearGradient(0, y - 8, 0, y + 8); gg.addColorStop(0, 'rgba(255,230,200,0)'); gg.addColorStop(0.5, `rgba(255,226,190,${0.05 + R() * 0.1})`); gg.addColorStop(1, 'rgba(255,230,200,0)'); g.fillStyle = gg; g.fillRect(R() * 1024 - w / 2, y - 8, w, 16) }
+  const hz = g.createLinearGradient(0, 150, 0, 262); hz.addColorStop(0, 'rgba(214,170,120,0)'); hz.addColorStop(1, 'rgba(226,176,120,0.65)'); g.fillStyle = hz; g.fillRect(0, 150, 1024, 112)
+  // 低い太陽（光の向きに合わせた位置）。まわりは黄ばんだ光のにじみ
+  const sg = g.createRadialGradient(512, 193, 3, 512, 193, 220); sg.addColorStop(0, 'rgba(255,250,232,1)'); sg.addColorStop(0.035, 'rgba(255,238,190,0.98)'); sg.addColorStop(0.12, 'rgba(255,210,140,0.55)'); sg.addColorStop(1, 'rgba(255,170,90,0)'); g.fillStyle = sg; g.fillRect(0, 0, 1024, 512)
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t
 }
 export function splatTexture() {   // 泥のはねあと

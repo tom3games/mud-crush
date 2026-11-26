@@ -1,10 +1,11 @@
 // 入口: 画面の切り替え・入力・HUD・音・ループ。試合の中身は sim.js、CPU は cpu.js、絵は stage.js
 import * as THREE from 'three'
-import { createState, step, DT, BODIES, BUMPERS, TIRES, ENGINES, CAR_COLORS, GRACE } from './sim.js?v=1'
-import { EngineMix } from './engine.js?v=1'
-import { makeInputs } from './cpu.js?v=1'
-import { Stage } from './stage.js?v=1'
-import { SAFE0, WORLD, POLES, BOXES, MUDS } from './arena.js?v=1'
+import { createState, step, DT, BODIES, BUMPERS, TIRES, ENGINES, CAR_COLORS, GRACE } from './sim.js?v=2'
+import { EngineMix } from './engine.js?v=2'
+import { makeInputs } from './cpu.js?v=2'
+import { Stage } from './stage.js?v=2'
+import { loadAssets } from './assets.js?v=2'
+import { SAFE0, WORLD, POLES, BOXES, MUDS } from './arena.js?v=2'
 
 const Q = new URLSearchParams(location.search)
 const $ = id => document.getElementById(id)
@@ -35,8 +36,8 @@ const playSnd = (name, o = {}) => { if ((o.vol ?? 1) < 0.035) return; const now 
 // ------------------------------------------------------------ 画面と状態
 const stage = new Stage($('view'), { low, preserve: Q.get('shot') === '1' })
 stage.snd = playSnd
-addEventListener('resize', () => { stage.resize(); sizeWind(); sizeCrack() })
-if (window.visualViewport) visualViewport.addEventListener('resize', () => { stage.resize(); sizeWind(); sizeCrack() })
+addEventListener('resize', () => { stage.resize(); sizeWind(); sizeCrack(); sizeMud() })
+if (window.visualViewport) visualViewport.addEventListener('resize', () => { stage.resize(); sizeWind(); sizeCrack(); sizeMud() })
 const seedBase = +(Q.get('seed') || (Date.now() % 100000))
 let S = createState(seedBase, { noCountdown: true }), phase = 'title', matchNo = 0, human = false
 let lo = { body: 0, bumper: 0, tire: 0, engine: 1 }
@@ -199,7 +200,7 @@ function showResult(rank) {
 // ------------------------------------------------------------ フロントガラスのひび
 const crackC = $('crack'), cg = crackC.getContext('2d'); let cracks = []
 function sizeCrack() { crackC.width = innerWidth; crackC.height = (window.visualViewport && visualViewport.height) || innerHeight; drawCracks() }
-function clearCracks() { cracks = []; drawCracks() }
+function clearCracks() { cracks = []; drawCracks(); splats = [] }
 function drawCracks() {
   cg.clearRect(0, 0, crackC.width, crackC.height)
   for (const k of cracks) {
@@ -212,6 +213,24 @@ function drawCracks() {
     cg.fillStyle = 'rgba(255,255,255,.55)'; cg.beginPath(); cg.arc(cx, cy, 2.6, 0, 7); cg.fill()
   }
 }
+// 泥はね: 泥の中を速く走る時とぶつかった時に、画面（フロントガラス）へ茶色いしみがつき、数秒でゆっくり消える
+const mudC = $('mud'), mg = mudC.getContext('2d'); let splats = [], mudDrawn = false
+function sizeMud() { mudC.width = innerWidth; mudC.height = (window.visualViewport && visualViewport.height) || innerHeight }
+function addMud(n = 1, big = 1) { for (let i = 0; i < n && splats.length < 14; i++) splats.push({ x: 0.1 + Math.random() * 0.8, y: 0.18 + Math.random() * 0.55, r: (0.03 + Math.random() * 0.06) * big, t: performance.now(), life: 4500 + Math.random() * 3000, sd: (Math.random() * 1e6 + 1) | 0 }) }
+function drawMud(now) {
+  if (!splats.length) { if (mudDrawn) { mg.clearRect(0, 0, mudC.width, mudC.height); mudDrawn = false } return }
+  mudDrawn = true; mg.clearRect(0, 0, mudC.width, mudC.height); const W = mudC.width, H = mudC.height, sc = Math.min(W, H * 0.8)
+  splats = splats.filter(s => now - s.t < s.life)
+  for (const s of splats) {
+    const k = (now - s.t) / s.life, a = k < 0.55 ? 1 : 1 - (k - 0.55) / 0.45, x = s.x * W, y = s.y * H + k * k * H * 0.12, r = s.r * sc
+    let sd = s.sd; const rr = () => { sd = (sd * 16807) % 2147483647; return (sd - 1) / 2147483646 }
+    mg.globalAlpha = a * 0.92
+    for (let i = 0; i < 7; i++) { const ang = rr() * 6.283, d = rr() * r * 0.8, q = r * (0.35 + rr() * 0.55); const gr = mg.createRadialGradient(x + Math.cos(ang) * d, y + Math.sin(ang) * d, 0, x + Math.cos(ang) * d, y + Math.sin(ang) * d, q); gr.addColorStop(0, 'rgba(46,32,20,0.95)'); gr.addColorStop(0.75, 'rgba(58,40,24,0.85)'); gr.addColorStop(1, 'rgba(58,40,24,0)'); mg.fillStyle = gr; mg.beginPath(); mg.arc(x + Math.cos(ang) * d, y + Math.sin(ang) * d, q, 0, 7); mg.fill() }
+    for (let i = 0; i < 9; i++) { const ang = rr() * 6.283, d = r * (0.9 + rr() * 0.9), q = 1.5 + rr() * 4; mg.fillStyle = 'rgba(52,36,22,0.9)'; mg.beginPath(); mg.arc(x + Math.cos(ang) * d, y + Math.sin(ang) * d * 0.8, q, 0, 7); mg.fill() }
+  }
+  mg.globalAlpha = 1
+}
+sizeMud()
 sizeCrack()
 function addCrack(power) {
   if (cracks.length >= 7) cracks.shift()
@@ -244,6 +263,7 @@ function onEvents() {
         if (mc && (e.a === mc.id || e.b === mc.id)) {
           const mine = e.a === mc.id, zone = mine ? e.za : e.zb
           stage.hitStop = Math.max(stage.hitStop, 0.035 + Math.min(e.power, 20) * 0.0045)
+          if (mc.mud > 0.25 || e.power > 16) addMud(2 + (e.power > 12 ? 2 : 0), 1.4)
           if (e.power > 6) { const v = $('vig'); v.classList.add('hit'); setTimeout(() => v.classList.remove('hit'), 70) }
           if (zone === 'f' && e.power > 7 && (mine ? e.da : e.db) > 0) { addCrack(e.power); playSnd('glass', { vol: 0.5 + Math.min(0.4, e.power * 0.02) }) }
         }
@@ -400,9 +420,10 @@ function frame(now) {
       if (mc.boosting && !wasBoost) playSnd('whoosh', { vol: 0.7, rate: 0.85 }); wasBoost = mc.boosting
       mudT -= dt; const sp = Math.hypot(mc.vx, mc.vz)
       if (mc.mud > 0.4 && sp > 5 && mudT <= 0) { mudT = 0.5 + Math.random() * 0.3; playSnd('plop', { vol: Math.min(0.5, sp * 0.03), rate: 0.6 + Math.random() * 0.3 }) }
+      if (mc.mud > 0.45 && sp > 8 && Math.random() < dt * 2.2) addMud(1, 1)
       $('bNitro').classList.toggle('on', mc.boosting)
     }
-    drawWind(0, !!mc.boosting, mc.alive)
+    drawWind(0, !!mc.boosting, mc.alive); drawMud(performance.now())
     // 終わり: 自分が潰れて少したったら / 試合が決まったら
     if (!mc.alive && !shownResult && !resultAt) resultAt = S.t + (mc.outHow === 'flip' ? 2.8 : 2.4)
     if (S.over && !shownResult && !resultAt) resultAt = S.t + 1.2
@@ -415,13 +436,15 @@ function frame(now) {
 
 // ------------------------------------------------------------ 読み込み
 async function boot() {
-  $('loadbar').style.width = '30%'
+  $('loadbar').style.width = '20%'
+  await loadAssets(() => { $('loadbar').style.width = '45%' }); stage.buildProps()
+  $('loadbar').style.width = '60%'
   await Promise.race([Snd.prefetch(['snd/music.mp3']), new Promise(r => setTimeout(r, 5000))])
   $('loadbar').style.width = '100%'
   await new Promise(r => setTimeout(r, 160))
   $('loading').classList.add('off'); setTimeout(() => $('loading').remove(), 600)
   $('title').hidden = false
-  window.__mc = { THREE, S: () => S, stage, K, startMatch, toPrep, toTitle, phase: () => phase, lo: () => lo, setLo: v => { Object.assign(lo, v) }, setSpeed: v => { simSpeed = v }, me, advance: n => { for (let i = 0; i < n; i++) { step(S, makeInputs(S, DT, human && !K.auto ? readHuman() : null), DT); onEvents() } }, showResult, addCrack, say, sound: () => ({ played: Snd.played, level: Snd.level() }), hud: () => ({ marks: marks.length, cracks: cracks.length }), setLook: v => { lookOff = v; lookAt = performance.now() } }
+  window.__mc = { THREE, S: () => S, stage, K, startMatch, toPrep, toTitle, phase: () => phase, lo: () => lo, setLo: v => { Object.assign(lo, v) }, setSpeed: v => { simSpeed = v }, me, advance: n => { for (let i = 0; i < n; i++) { step(S, makeInputs(S, DT, human && !K.auto ? readHuman() : null), DT); onEvents() } }, showResult, addCrack, addMud, say, sound: () => ({ played: Snd.played, level: Snd.level() }), hud: () => ({ marks: marks.length, cracks: cracks.length }), setLook: v => { lookOff = v; lookAt = performance.now() } }
   window.__mcReady = true
   if (Q.get('start')) { if (Q.get('start') === 'prep') toPrep(); else startMatch() }
   requestAnimationFrame(t => { last = t; frame(t) })

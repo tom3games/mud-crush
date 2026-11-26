@@ -5,7 +5,7 @@
 html,body{height:100%;overflow:hidden;background:var(--soil);color:var(--dust);font-family:var(--jp);font-weight:700;touch-action:none;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 body{height:100vh;height:100dvh;height:var(--vh,100dvh);position:fixed;top:0;left:0;right:0}
 #view,#gl{position:fixed;top:0;left:0;width:100%;height:var(--vh,100dvh);display:block}
-canvas#crack,canvas#wind,#vig{position:fixed;top:0;left:0;width:100%;height:var(--vh,100dvh);pointer-events:none;z-index:4}
+canvas#crack,canvas#mud,canvas#wind,#vig{position:fixed;top:0;left:0;width:100%;height:var(--vh,100dvh);pointer-events:none;z-index:4}
 #vig{background:radial-gradient(ellipse at 50% 50%,transparent 52%,rgba(150,40,14,.62) 100%);opacity:0;transition:opacity .25s}
 #vig.out{opacity:1;animation:warn .9s ease-in-out infinite alternate}
 #vig.hit{background:rgba(255,236,200,.5);opacity:1;transition:none}
@@ -170,8 +170,8 @@ body.touch #tc .arrow,body.touch #tc .gas,body.touch #tc .back,body.touch #tc .n
 .pcard h2{font:800 40px var(--min);color:var(--rust2);text-align:center;margin-bottom:6px}
 #err{position:fixed;left:8px;right:8px;bottom:8px;color:#f66;font:11px monospace;z-index:40;white-space:pre-wrap}
 @media (orientation:landscape) and (max-height:520px){
-  #title{flex-direction:row;flex-wrap:wrap;align-items:flex-end}
-  .tlogo h1{font-size:96px}.tape{margin-top:8px}
+  #title{flex-direction:row;flex-wrap:wrap;align-items:flex-end;padding-top:calc(var(--st) + 10px)}
+  .tlogo h1{font-size:84px}.tape{margin-top:6px}.en{font-size:20px}
   .tact{margin-top:0;margin-left:auto}
   #result{align-items:center}.rank b{font-size:76px}.rank span{font-size:26px}.verdict{font-size:18px}
   #rkList li{padding:1px 8px;font-size:12px}.acts{flex-direction:row}.acts .plate:first-child{font-size:16px;padding:8px 12px}.acts .plate.ghost{font-size:13px;padding:8px 10px}

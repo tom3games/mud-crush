@@ -1,6 +1,6 @@
 # クレジット
 
-音は CC0 または作者の制作。車・地面・空・岩の絵は全部コードでその場で描いている（外部の画像・3Dモデルなし）。
+音は CC0 または作者の制作。車・地面・空・岩壁の絵はコードでその場で描いている。
 
 - snd/crash1.mp3: 100 CC0 SFX / rubberduck / CC0
 - snd/crash2.mp3: 100 CC0 SFX / rubberduck / CC0
@@ -40,3 +40,6 @@
 - snd/spring3.mp3: 100 CC0 SFX / rubberduck / CC0
 - snd/music.mp3: 音楽: Suno で作成（作者のアカウント）。つなぎ目を重ねたループ版
 - snd/eng_idle.wav, eng_mid.wav, eng_high.wav: racing car engine sound loops / domasx2 / CC0（回転数ごとに切り出して加工）
+
+## 3Dモデル（Poly Haven・CC0）
+- 岩 rock_07（Jenelle van Heerden）・rock_09（Jenelle van Heerden）、古いタイヤ old_tyre（MP）。https://polyhaven.com/ 。CC0。テクスチャは 512px に縮小。タイヤは車輪・バンパーの束・タイヤの山に使っている

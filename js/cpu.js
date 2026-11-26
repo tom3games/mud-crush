@@ -1,6 +1,6 @@
 // CPU の運転。入力は人と同じ { throttle, steer, nitro }。sim にだけ依存する（画面なし）
-import { solidAtPoint, clamp } from './arena.js?v=1'
-import { angDiff } from './sim.js?v=1'
+import { solidAtPoint, clamp } from './arena.js?v=2'
+import { angDiff } from './sim.js?v=2'
 
 function brain(S, c) {
   if (c.ai) return c.ai

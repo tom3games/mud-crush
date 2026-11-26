@@ -61,8 +61,8 @@ for (const [name, bt, extra] of [['chromium', chromium, { args: [...MUTE_LAUNCH.
     const c = await q.evaluate(() => { const c = window.__mc.me(); return { b: c.lo.body, u: c.lo.bumper, t: c.lo.tire, e: c.lo.engine } }); expect(c.b === 2 && c.u === 1 && c.t === 0 && c.e === 2, JSON.stringify(c)); return true
   })
   await t(`[${name}] 3・2・1のあと走れる（W・ニトロ・ハンドル）`, async () => {
-    await q.waitForTimeout(3600)
-    await q.keyboard.down('KeyW'); await q.keyboard.down('KeyD'); await q.waitForTimeout(1800); await q.keyboard.up('KeyD')
+    await q.waitForFunction(() => window.__mc.S().phase === 'play', null, { timeout: 60000 })
+    await q.keyboard.down('KeyW'); await q.keyboard.down('KeyD'); await q.waitForFunction(() => window.__mc.me().speedKmh > 10, null, { timeout: 30000 }).catch(() => {}); await q.keyboard.up('KeyD')
     const v = await q.evaluate(() => window.__mc.me().speedKmh); expect(v > 10, 'speed ' + v)
     await q.keyboard.up('KeyW'); await q.keyboard.down('ShiftLeft'); await q.waitForTimeout(700)
     const n = await q.evaluate(() => ({ b: window.__mc.me().boosting, n: window.__mc.me().nitro })); await q.keyboard.up('ShiftLeft')

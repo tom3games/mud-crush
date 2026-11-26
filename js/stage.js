@@ -1,12 +1,14 @@
 // 画面: 採石場を組み、試合の状態(sim)を毎フレーム絵にする。出来事(events)から演出を出す
 import * as THREE from 'three'
-import { WORLD, SAFE0, POLES, BOXES, MUDS, H, mudAt } from './arena.js?v=1'
-import * as TX from './textures.js?v=1'
-import { Baker, rbox } from './models.js?v=1'
-import { buildTruck } from './trucks.js?v=1'
-import { Particles, Debris, Rings } from './fx.js?v=1'
-import { statsOf } from './sim.js?v=1'
+import { WORLD, SAFE0, POLES, BOXES, MUDS, H, mudAt } from './arena.js?v=2'
+import * as TX from './textures.js?v=2'
+import { Baker, rbox } from './models.js?v=2'
+import { buildTruck, wreckInto } from './trucks.js?v=2'
+import { assets } from './assets.js?v=2'
+import { Particles, Debris, Rings } from './fx.js?v=2'
+import { statsOf } from './sim.js?v=2'
 
+const clampN = (v, a, b) => v < a ? a : v > b ? b : v
 const lerp = (a, b, t) => a + (b - a) * t
 const lerpAng = (a, b, t) => { let d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return a + d * t }
 export const PREVIEW_AT = { x: 38, z: -14 }
@@ -20,7 +22,7 @@ export class Stage {
     r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap
     r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 0.95
     host.appendChild(r.domElement); r.domElement.id = 'gl'
-    this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(0xb59c78); this.scene.fog = new THREE.FogExp2(0xb89c78, 0.0062)
+    this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(0xb59c78); this.scene.fog = new THREE.FogExp2(0xbfa786, 0.0072)
     this.cam = new THREE.PerspectiveCamera(75, 1, 0.25, 600)
     this.scene.add(this.cam)
     this.camYaw = 0; this.shake = 0; this.hitStop = 0; this.time = 0; this.camRoll = 0
@@ -41,32 +43,32 @@ export class Stage {
     const env = new THREE.Scene()
     const dome = new THREE.Mesh(new THREE.SphereGeometry(50, 24, 16), new THREE.MeshBasicMaterial({ side: THREE.BackSide, vertexColors: true }))
     const pos = dome.geometry.attributes.position, col = new Float32Array(pos.count * 3), c = new THREE.Color()
-    for (let i = 0; i < pos.count; i++) { const y = pos.getY(i) / 50; c.setRGB(...(y > 0 ? [0.5 + y * 0.1, 0.5 + y * 0.12, 0.5 + y * 0.2] : [0.3, 0.24, 0.18])); col.set([c.r, c.g, c.b], i * 3) }
+    for (let i = 0; i < pos.count; i++) { const y = pos.getY(i) / 50; c.setRGB(...(y > 0 ? [0.62 + y * 0.1, 0.5 + y * 0.08, 0.36 + y * 0.1] : [0.26, 0.18, 0.12])); col.set([c.r, c.g, c.b], i * 3) }
     dome.geometry.setAttribute('color', new THREE.BufferAttribute(col, 3)); env.add(dome)
     const sunP = new THREE.Mesh(new THREE.PlaneGeometry(16, 10), new THREE.MeshBasicMaterial({ color: new THREE.Color(6, 4.6, 3) })); sunP.position.set(-30, 24, 28); sunP.lookAt(0, 0, 0); env.add(sunP)
     const pm = new THREE.PMREMGenerator(this.renderer); this.scene.environment = pm.fromScene(env, 0.03).texture; this.scene.environmentIntensity = 0.35; pm.dispose()
   }
   buildLights() {
     const s = this.scene
-    s.add(new THREE.HemisphereLight(0xe0cfae, 0x5d4733, 0.55))
-    const sun = this.sun = new THREE.DirectionalLight(0xffd7a0, 1.7); sun.position.set(-34, 40, 30); sun.castShadow = true
-    const ms = this.low ? 1024 : 2048; sun.shadow.mapSize.set(ms, ms); const sc = sun.shadow.camera; sc.left = -50; sc.right = 50; sc.top = 50; sc.bottom = -50; sc.near = 5; sc.far = 150; sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.1
+    s.add(new THREE.HemisphereLight(0xe6cfa8, 0x4f3a28, 0.62))
+    const sun = this.sun = new THREE.DirectionalLight(0xffd6a4, 2.25); sun.position.set(-48, 24, 34); sun.castShadow = true
+    const ms = this.low ? 1024 : 2048; sun.shadow.mapSize.set(ms, ms); const sc = sun.shadow.camera; sc.left = -56; sc.right = 56; sc.top = 56; sc.bottom = -56; sc.near = 5; sc.far = 170; sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.1
     s.add(sun); s.add(sun.target)
     const fill = new THREE.DirectionalLight(0x9fb0c8, 0.4); fill.position.set(30, 14, -30); s.add(fill)
-    this.sunOff = new THREE.Vector3(-34, 40, 30)
+    this.sunOff = new THREE.Vector3(-48, 24, 34)
   }
   // ---------------------------------------------------------------- 固定の景色
   buildArena() {
     const S = this.scene, aniso = this.low ? 4 : 8, Wd = WORLD + 10
     // 空
-    const sky = new THREE.Mesh(new THREE.SphereGeometry(450, 32, 16), new THREE.MeshBasicMaterial({ map: TX.skyTexture(), side: THREE.BackSide, fog: false, depthWrite: false, toneMapped: false })); sky.renderOrder = -10; sky.rotation.y = 0.6; S.add(sky); this.sky = sky
+    const sky = new THREE.Mesh(new THREE.SphereGeometry(450, 32, 16), new THREE.MeshBasicMaterial({ map: TX.skyTexture(), side: THREE.BackSide, fog: false, depthWrite: false, toneMapped: false })); sky.renderOrder = -10; sky.rotation.y = 2.52; S.add(sky); this.sky = sky
     // 地面: 高さ付きの格子。世界を1枚の絵で貼り、細かい土の粒を重ねる。泥は濡れて光る
     const step = 2, n = Math.round(Wd * 2 / step) + 1, pos = new Float32Array(n * n * 3), uv = new Float32Array(n * n * 2), idx = []
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const k = j * n + i, x = -Wd + i * step, z = -Wd + j * step; pos.set([x, H(x, z), z], k * 3); uv.set([(x + Wd) / (2 * Wd), (z + Wd) / (2 * Wd)], k * 2) }
     for (let j = 0; j < n - 1; j++) for (let i = 0; i < n - 1; i++) { const a = j * n + i, b = a + 1, c = a + n, d = c + 1; idx.push(a, c, b, b, c, d) }
     const g = this.groundGeo = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals()
     const gt = TX.groundTextures(this.low ? 1536 : 2048, aniso), det = TX.detailTexture(aniso)
-    const fm = new THREE.MeshStandardMaterial({ map: gt.map, roughnessMap: gt.rough, roughness: 1, metalness: 0.0, envMapIntensity: 0.8 })
+    const fm = new THREE.MeshStandardMaterial({ map: gt.map, bumpMap: gt.map, bumpScale: 1.6, roughnessMap: gt.rough, roughness: 1, metalness: 0.0, envMapIntensity: 0.9 })
     fm.onBeforeCompile = sh => {
       sh.uniforms.uDetail = { value: det }
       sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vWP;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvWP = position.xz;')
@@ -87,46 +89,19 @@ export class Stage {
       vertexShader: 'varying vec2 vUv; varying vec3 vW; void main(){ vUv = uv; vW = (modelMatrix * vec4(position,1.0)).xyz; gl_Position = projectionMatrix * viewMatrix * vec4(vW, 1.0); }',
       fragmentShader: 'uniform float uT; varying vec2 vUv; varying vec3 vW; void main(){ float a = atan(vW.x, vW.z); float n = 0.5 + 0.5 * sin(a * 31.0 + uT * 1.4 + vUv.y * 5.0) * sin(a * 17.0 - uT * 0.8); float v = pow(1.0 - vUv.y, 1.6); gl_FragColor = vec4(vec3(0.78, 0.52, 0.25) + n * 0.1, v * (0.16 + n * 0.22)); }' })
     this.ringWall = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 16, 96, 1, true), wallM); this.ringWall.position.y = 8; this.ringWall.renderOrder = 3; S.add(this.ringWall)
-    // 岩壁: 地層の縞のある円筒。内側へせり出したり引っこんだりして、ごつごつさせる
-    const rg = new THREE.CylinderGeometry(WORLD + 6, WORLD + 8, 40, 128, 12, true), rp = rg.attributes.position
-    for (let i = 0; i < rp.count; i++) { const x = rp.getX(i), y = rp.getY(i), z = rp.getZ(i), a = Math.atan2(x, z), k = 1 + 0.045 * Math.sin(a * 9 + y * 0.2) + 0.03 * Math.sin(a * 23 + y * 0.5) + 0.02 * Math.sin(a * 41 - y * 0.3); rp.setXYZ(i, x * k, y + (y > -19 ? Math.sin(a * 7) * 1.2 : 0), z * k) }
+    // 岩壁: 採石場の段（ベンチ）。壁と平らな段を交互に重ね、岩肌を凹凸にする。段は土ぼこりで明るく、壁は地層の縞
+    const pr = [[WORLD + 3, -3]], seg = (r0, y0, r1, y1, n) => { for (let i = 1; i <= n; i++) pr.push([r0 + (r1 - r0) * i / n, y0 + (y1 - y0) * i / n]) }
+    seg(WORLD + 3, -3, WORLD + 4.5, 9, 14); seg(WORLD + 4.5, 9, WORLD + 15, 9.8, 4); seg(WORLD + 15, 9.8, WORLD + 16.5, 23, 12); seg(WORLD + 16.5, 23, WORLD + 29, 23.8, 4); seg(WORLD + 29, 23.8, WORLD + 31, 42, 14); seg(WORLD + 31, 42, WORLD + 70, 48, 3)
+    const rg = new THREE.LatheGeometry(pr.map(([r, y]) => new THREE.Vector2(r, y)), 200), rp = rg.attributes.position
+    for (let i = 0; i < rp.count; i++) { const x = rp.getX(i), y = rp.getY(i), z = rp.getZ(i), a = Math.atan2(x, z), steep = Math.abs(Math.sin(y * 0.9)) < 2 ? 1 : 0
+      const k = 1 + 0.03 * Math.sin(a * 9 + y * 0.2) + 0.022 * Math.sin(a * 23 + y * 0.5) + 0.014 * Math.sin(a * 47 - y * 0.3) + 0.01 * Math.sin(a * 91 + y * 1.1)
+      rp.setXYZ(i, x * k, y + 0.6 * Math.sin(a * 13 + y) * steep, z * k) }
     rg.computeVertexNormals()
-    const rockM = new THREE.MeshStandardMaterial({ map: TX.rockTexture(aniso), roughness: 1, metalness: 0, side: THREE.BackSide, envMapIntensity: 0.3 })
-    const wall = new THREE.Mesh(rg, rockM); wall.position.y = 18; wall.receiveShadow = true; S.add(wall)
+    { const nrm = rg.attributes.normal, col = new Float32Array(rp.count * 3); for (let i = 0; i < rp.count; i++) { const up = Math.max(0, nrm.getY(i)), n = 0.5 + 0.5 * Math.sin(rp.getX(i) * 0.7 + rp.getZ(i) * 0.4), v = 1 - up * 0.0; col.set([0.92 * v + up * 0.08 + n * 0.05, 0.86 * v + up * 0.02, 0.78 * v - up * 0.1], i * 3) } rg.setAttribute('color', new THREE.BufferAttribute(col, 3)) }
+    const rockT = TX.rockTexture(aniso), rockM = new THREE.MeshStandardMaterial({ map: rockT, bumpMap: rockT, bumpScale: 2.6, vertexColors: true, roughness: 1, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.25 })
+    const wall = new THREE.Mesh(rg, rockM); wall.receiveShadow = true; S.add(wall)
     // 壁の上の外: 遠くの山
-    const hills = new THREE.Mesh(new THREE.CylinderGeometry(WORLD + 60, WORLD + 90, 40, 64, 1, true), new THREE.MeshBasicMaterial({ color: 0x8a6c4c, side: THREE.BackSide, fog: true })); hills.position.y = 40; S.add(hills)
-    // 岩（円）
-    const rockTex = TX.rockTexture(aniso); rockTex.repeat.set(2, 1)
-    const rm = new THREE.MeshStandardMaterial({ map: rockTex, roughness: 0.95, flatShading: true, color: 0xd8c4a4 })
-    let sd = 7; const rr = () => { sd = (sd * 16807) % 2147483647; return (sd - 1) / 2147483646 }
-    for (const o of POLES) {
-      if (o.kind === 'rock') {
-        const geo = new THREE.IcosahedronGeometry(1, 2), p = geo.attributes.position
-        for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i), k = 0.78 + 0.34 * Math.sin(x * 2.3 + y * 1.7) * Math.cos(z * 2.1 - y * 1.3) + rr() * 0.12; p.setXYZ(i, x * k, y * k, z * k) }
-        geo.computeVertexNormals()
-        const m = new THREE.Mesh(geo, rm); m.scale.set(o.r * 0.92, o.h * 0.62, o.r * 0.92); m.position.set(o.x, o.base + o.h * 0.38, o.z); m.rotation.y = rr() * 6; m.castShadow = true; m.receiveShadow = true; S.add(m)
-      }
-    }
-    const bT = new Baker()
-    for (const o of POLES) if (o.kind === 'tires') for (let i = 0; i < 4; i++) bT.add(new THREE.TorusGeometry(0.78, 0.34, 8, 16), o.x + (i % 2) * 0.06, o.base + 0.34 + i * 0.5, o.z, 0x111111, Math.PI / 2)
-    const tm = bT.mesh(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 })); if (tm) S.add(tm)
-    // 積み上げた廃車
-    const bJ = new Baker(), bG = new Baker(), cols = [0x8a4a2a, 0x5b6770, 0x7a3a2c, 0x6e7d4c, 0xa08c3a, 0x3f5470], jm = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0.3 })
-    for (const o of BOXES) {
-      const along = o.w > o.d, L = along ? o.w : o.d, ry = along ? Math.PI / 2 : 0
-      const wreck = (y, c, tx, tr) => {   // 箱の車（窓は黒く抜け、タイヤは無い）
-        const px = (a, b) => along ? [o.x + b, o.z + a] : [o.x + a, o.z + b]
-        const [cx, cz] = px(tx, 0)
-        bJ.add(rbox(2.4, 0.9, L, 0.2), cx, o.base + y, cz, c, 0, ry === 0 ? 0 : 0, tr)
-        bJ.add(rbox(2.1, 0.8, L * 0.5, 0.2), cx, o.base + y + 0.88, cz, c * 0.0 + 0x3a3430, 0, 0, tr)
-        bG.add(new THREE.BoxGeometry(along ? L * 0.46 : 2.14, 0.5, along ? 2.14 : L * 0.46), cx, o.base + y + 1.2, cz, 0x0c0d0e)
-      }
-      const ci = o.a * 2
-      wreck(0.1, cols[ci % 6], 0, 0); wreck(1.7, cols[(ci + 1) % 6], 0.18, 0.05)
-      if (o.h > 2.8) wreck(0.0, cols[(ci + 2) % 6], 0, 0)
-      void ry
-    }
-    const jmesh = bJ.mesh(jm); if (jmesh) S.add(jmesh); const gmesh = bG.mesh(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.2, metalness: 0.5 }), false); if (gmesh) S.add(gmesh)
+    
     // 外の岩壁の上の重機（遠景）: 掘削機の影
     const ex = new Baker()
     for (const [a, h] of [[0.9, 34], [3.5, 30]]) {
@@ -136,6 +111,31 @@ export class Stage {
       ex.add(new THREE.BoxGeometry(1.0, 1.0, 12), x + Math.sin(a + Math.PI) * 7, y + 6, z + Math.cos(a + Math.PI) * 7, 0xb7861f, -0.5, a)
     }
     const em = ex.mesh(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8 }), false); if (em) S.add(em)
+  }
+  // 岩・タイヤの山・廃車の積み重ね（実物のモデルを読んだあとに置く）
+  buildProps() {
+    const S = this.scene
+    let sd = 7; const rr = () => { sd = (sd * 16807) % 2147483647; return (sd - 1) / 2147483646 }
+    let ri = 0
+    for (const o of POLES) {
+      if (o.kind === 'rock') {
+        const A = assets.rocks[ri++ % assets.rocks.length], k = o.r * 2.05 / Math.max(A.size.x, A.size.z), hy = clampN(o.h * 1.05 / A.size.y, k * 0.8, k * 1.6)
+        const m = new THREE.Mesh(A.geo, A.mat); m.scale.set(k, hy, k); m.position.set(o.x, o.base - 0.15, o.z); m.rotation.y = rr() * 6.28; m.castShadow = true; m.receiveShadow = true; S.add(m)
+      } else if (o.kind === 'tires') {
+        const t = new THREE.Mesh(assets.tyre.geo, assets.tyre.mat); t.scale.set(0.5 / assets.tyre.w, 1.5, 1.5)
+        for (let i = 0; i < 4; i++) { const q = t.clone(); q.rotation.z = Math.PI / 2; q.rotation.y = rr() * 6; q.position.set(o.x + (i % 2) * 0.05, o.base + 0.25 + i * 0.5, o.z); q.castShadow = true; S.add(q) }
+      }
+    }
+    // 積み上げた廃車
+    const bJ = new Baker(), bG = new Baker(), cols = [0x6a4028, 0x4a5258, 0x5e3328, 0x586240, 0x7a6a34, 0x34445a], R = () => rr()
+    const jm = new THREE.MeshStandardMaterial({ map: TX.grungeTexture(), vertexColors: true, roughness: 0.85, metalness: 0.3 })
+    for (const o of BOXES) {
+      const along = o.w > o.d, ang = along ? Math.PI / 2 : 0, ci = o.a * 2
+      const lay = (y, c, dx, tl) => wreckInto(bJ, bG, o.x + (along ? 0 : dx), o.base + y, o.z + (along ? dx : 0), ang, c, R, tl)
+      lay(0.05, cols[ci % 6], 0, 0); lay(1.25, cols[(ci + 1) % 6], 0.18, 0.05); if (o.h > 2.8) lay(2.45, cols[(ci + 2) % 6], -0.2, -0.06)
+      const L = along ? o.w : o.d; void L
+    }
+    const jmesh = bJ.mesh(jm); if (jmesh) S.add(jmesh); const gmesh = bG.mesh(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.2, metalness: 0.5 }), false); if (gmesh) S.add(gmesh)
   }
   // ---------------------------------------------------------------- 動くもの
   buildDynamic() {
@@ -147,7 +147,7 @@ export class Stage {
     const tg = new THREE.PlaneGeometry(0.5, 1.1); tg.rotateX(-Math.PI / 2)
     const tmat = new THREE.MeshBasicMaterial({ alphaMap: TX.trackTexture(), color: 0x2b1e13, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3, opacity: 0.8 })
     tmat.alphaMap.rotation = 0
-    this.trackN = 420; this.tracks = new THREE.InstancedMesh(tg, tmat, this.trackN); this.tracks.frustumCulled = false; this.tracks.count = 0; this.trackI = 0; this.tracks.renderOrder = 2; S.add(this.tracks)
+    this.trackN = 900; this.tracks = new THREE.InstancedMesh(tg, tmat, this.trackN); this.tracks.frustumCulled = false; this.tracks.count = 0; this.trackI = 0; this.tracks.renderOrder = 2; S.add(this.tracks)
     this.trackM = new THREE.Matrix4(); this.trackQ = new THREE.Quaternion(); this.trackE = new THREE.Euler()
     // 台座（準備画面の車）
     this.pad = new THREE.Mesh(new THREE.CylinderGeometry(8, 8.4, 0.3, 40), new THREE.MeshStandardMaterial({ color: 0x4a443b, roughness: 0.95 })); this.pad.position.set(PREVIEW_AT.x, H(PREVIEW_AT.x, PREVIEW_AT.z) + 0.1, PREVIEW_AT.z); this.pad.visible = false; this.pad.receiveShadow = true; S.add(this.pad)
@@ -197,10 +197,13 @@ export class Stage {
       const sp = c.vx * Math.sin(c.yaw) + c.vz * Math.cos(c.yaw)
       v.spin += sp * dt
       for (const w of v.wheels) { w.mesh.rotation.x = v.spin / w.r; if (w.front) w.g.rotation.y = -c.steer * 0.42 }
-      v.parts.body && (v.bodyMat.color.setScalar(0.55 + 0.45 * Math.max(0, c.hp) / 100))
-      if (c.human && o.mine !== false) { if (v.parts.glass) v.parts.glass.visible = false } else if (v.parts.glass) v.parts.glass.visible = true
+      v.bodyMat.color.setScalar(0.62 + 0.38 * Math.max(0, c.hp) / 100)
+      if (c.alive) { const spd = Math.hypot(c.vx, c.vz); if (c.mud > 0.25 && spd > 3) v.dirtU.value = Math.min(1, v.dirtU.value + dt * c.mud * spd * 0.0038); else if (spd > 4) v.dirtU.value = Math.min(1, v.dirtU.value + dt * spd * 0.00025) }
+      { const fpv = c.human && o.mine !== false; if (v.parts.glass) v.parts.glass.visible = !fpv; if (v.parts.mirror) v.parts.mirror.visible = !fpv }
       if (!v.preview) this.effects(S, c, v, dt, x, y, z, yaw, sp)
     }
+    this.ambT = (this.ambT || 0) - dt
+    if (this.ambT <= 0 && o.focus) { this.ambT = this.low ? 0.5 : 0.28; const a = Math.random() * 6.283, d = 6 + Math.random() * 55; this.pDust.emit(o.focus.x + Math.sin(a) * d, 0.8 + Math.random() * 2.5, o.focus.z + Math.cos(a) * d, 3.4, 0.1, 1.3, 9, 7, 15, 0xc9b08a, 0xd8c09a, 0.11, 0, 0) }
     this.pDust.update(dt); this.pFire.update(dt); this.debris.update(dt); this.rings.update(dt)
     // 影を追う
     const fc = o.focus ? o.focus : { x: 0, z: 0 }
@@ -218,7 +221,7 @@ export class Stage {
         v.dustT = Math.max(0.025, 0.12 - speed * 0.004)
         for (const sx of [-1, 1]) {
           const [px, py, pz] = wp(sx * 1.3, 0.2, -2.2)
-          if (mudk > 0.35) this.pDust.emit(px, py, pz, -c.vx * 0.2 + (Math.random() - 0.5) * 3 + sx * 2.5 * cy, 1.8 + rr(3.2), -c.vz * 0.2 + (Math.random() - 0.5) * 3 - sx * 2.5 * sy, 0.9 + rr(0.5), 0.35, 0.6, MUDC, 0x2e2216, 0.95, 14, 0.1)
+          if (mudk > 0.3) { for (let q = 0; q < 3; q++) this.pDust.emit(px, py, pz, -c.vx * 0.25 + (Math.random() - 0.5) * 4 + sx * (2 + rr(4)) * cy, 2.5 + rr(5), -c.vz * 0.25 + (Math.random() - 0.5) * 4 - sx * (2 + rr(4)) * sy, 0.9 + rr(0.7), 0.3 + rr(0.35), 0.5 + rr(0.4), MUDC, 0x2e2216, 0.95, 16, 0.05); this.pDust.emit(px, py + 0.4, pz, 0, 0.8, 0, 1.2, 1.2, 3.2, 0x5a4630, 0x6e5a40, 0.3, 0, 1.4) }
           else this.pDust.emit(px, py + 0.2, pz, -c.vx * 0.12 + (Math.random() - 0.5) * 1.4, 0.7 + rr(1.2), -c.vz * 0.12 + (Math.random() - 0.5) * 1.4, 1.4 + rr(0.9), 0.9 + speed * 0.04, 3.2 + speed * 0.12, DUST, 0xcab592, 0.34, 0, 1.4)
         }
         // タイヤのあと

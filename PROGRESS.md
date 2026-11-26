@@ -13,3 +13,12 @@
 - 検査: tools/verify.mjs（Chromium・WebKit 36項目 全部OK: 5サイズの全画面が一画面・整備→試合→結果・キーとタッチ・ニトロ連打・一時停止・CPU戦の通し・エラー0）、tools/simtest.mjs 13項目、live.mjs（公開版 Chromium/WebKit エラー0・og 200・GitHub に個人名なし）
 - 公開: https://tom3games.github.io/mud-crush/?v=1（Pages built）。横丁（tom3games.com）への登録は未（portal の6か所＋検査15〜20分＋デプロイはメインで）
 - 未検証: iOS シミュレーターでの人としての通し・実機のスマホの動き・耳での音の聞こえ方
+
+## 2026-11-26 v2 作り込み（本人「見た目の作り込み」）
+- 読んだ: ship の reference/design.md（ゲームの行・AI臭・芯）、tmk_hub memory/semantic/knowledge-games-3d.md（3D の教訓。実測してから直す・見た目の不具合は設定の値を数える・撮って安っぽい所を強い順に3つ書いて直す周回）
+- 素材: Poly Haven（CC0）の rock_07・rock_09・old_tyre を models/ に入れた（テクスチャは 512px に縮小）。トラック・重機の無料モデルは取れる所が無かった（Kenney は403・GitHub 検索は空）ので、トラックは面取り・斜めの窓・部品を足して作り込む
+- 前の撮影: shots/before-pc.png（1440x900）・before-phone.png（390x844）・before-pc2.png（同じ種の別の場面）
+- 変えた事（v2）: ボンネットを低く小さく（先が下がる輪郭・通気の溝・格子・ヘッドライト）、運転台は斜めの窓の輪郭で押し出し、ミラー・ドアの継ぎ目・燃料タンク・泥よけ・リベット・油圧の筒・牛追いの枠を足した。排土板は塗装した鉄板（黄橙・黄黒の縁）。タイヤは実物（old_tyre）。岩は実物（rock_07/09）。廃車は輪郭を押し出した抜け殻。車体に泥が下から上へ付いていく（uDirt）。泥のくぼみは濡れて光る（粗さの絵を作り直し）。泥はね（タイヤの泥の塊・フロントガラスの泥のしみ）・土ぼこり・漂うもや・タイヤ跡900本。空は低い太陽と雲の筋、崖は採石場の段（壁と平らな段）、光は夕方の低い角度で長い影
+- 前後の撮影（同じ種・同じ時刻）: shots/before-pc.png と after-pc.png、before-phone.png と after-phone.png、before-pc2.png と after-pc2.png（どちらも壁際で詰まった場面）。ほかに v2g（PC）・v2h（スマホ）・v2i（泥の中）・v2j（遠景）
+- fps（tools/fps.mjs・Mac M5 の GPU・上限なし）: PC 1440x900 約350〜410fps、スマホ縦（低品質・CPU を4倍遅くした）約200fps。描画回数 191・三角形 約47万（岩2種が1つ約2.5万三角形で重い）。実機のスマホ GPU は未確認
+- 検査: simtest 13/13、hsim 20試合（平均93秒・未決着0）、verify 36/36（Chromium・WebKit）
