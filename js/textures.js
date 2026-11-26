@@ -1,6 +1,6 @@
 // 絵はすべてその場で描く（画像ファイルなし）。採石場の土・泥・岩肌・空
 import * as THREE from 'three'
-import { WORLD, MUDS, MOUNDS } from './arena.js?v=6'
+import { WORLD, MUDS, MOUNDS } from './arena.js?v=7'
 
 function rnd(seed) { let a = seed; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 } }
 function canvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d')] }

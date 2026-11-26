@@ -1,6 +1,6 @@
 // 試合の中身（状態と進め方）。THREE にも DOM にも依存しない。入力は 車ごとに { throttle, steer, nitro }。
 // オンラインにする時は、この step(S, inputs, dt) をそのままサーバーで回して、events と状態を配るだけでよい。
-import { H, WORLD, SAFE0, SAFE_MIN, NCAR, SPAWNS, pushOutCircle, clamp, mudAt } from './arena.js?v=6'
+import { H, WORLD, SAFE0, SAFE_MIN, NCAR, SPAWNS, pushOutCircle, clamp, mudAt } from './arena.js?v=7'
 
 export const DT = 1 / 60
 export const G = 24

@@ -1,12 +1,12 @@
 // 画面: 採石場を組み、試合の状態(sim)を毎フレーム絵にする。出来事(events)から演出を出す
 import * as THREE from 'three'
-import { WORLD, SAFE0, POLES, BOXES, MUDS, H, mudAt } from './arena.js?v=6'
-import * as TX from './textures.js?v=6'
-import { Baker, rbox } from './models.js?v=6'
-import { buildTruck, wreckInto } from './trucks.js?v=6'
-import { assets } from './assets.js?v=6'
-import { Particles, Debris, Rings } from './fx.js?v=6'
-import { statsOf } from './sim.js?v=6'
+import { WORLD, SAFE0, POLES, BOXES, MUDS, H, mudAt } from './arena.js?v=7'
+import * as TX from './textures.js?v=7'
+import { Baker, rbox } from './models.js?v=7'
+import { buildTruck, wreckInto } from './trucks.js?v=7'
+import { assets } from './assets.js?v=7'
+import { Particles, Debris, Rings } from './fx.js?v=7'
+import { statsOf } from './sim.js?v=7'
 
 const clampN = (v, a, b) => v < a ? a : v > b ? b : v
 const lerp = (a, b, t) => a + (b - a) * t

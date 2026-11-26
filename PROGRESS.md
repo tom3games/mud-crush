@@ -44,3 +44,8 @@
 - 空の縦の線: 雲の筋を四角で描いていて、端が縦の線に見えていた（コントラストを上げて確認）。端が柔らかい楕円に変え、継ぎ目をまたぐ分は左右にも描いた
 - 逆光の岩: 岩の材質に弱い自己発光と明るさ・半球光を足し、形が見えるようにした
 - 撮影: 前 shots/prev-pc・prev-phone・prev-cliff・prev-spin、後 n-pc・n-phone・n-cliff・n-spin・n-spin2、空の確認 k1（前）k2（後）
+
+## 2026-11-26 横丁に登録（v7）
+- mud-crush の index.html に転送 script（ghMove）と canonical/og を tom3games.com/play/mud-crush/ へ。Xのポストの URL も同じ。?v=7
+- 言葉の決め方: Google 検索候補で確認。「車 クラッシュ ゲーム」（候補に「車 クラッシュ ゲーム 無料」が出る・他のゲームの KWS と重ならない）。英語は "car crash game"（候補が多数）。ほかの案「車 バトル ゲーム」「車 ぶつけ合い」「車 潰し合い」は候補が出なかったので外した
+- portal の6か所: games.mjs・説明ページ ja/mud-crush.md と _keywords.tsv・alts.mjs（ALTS と KWS）・en.mjs（GAMES_EN と NOREN_EN）・en-pages-c.mjs・tools/verify.mjs の READY

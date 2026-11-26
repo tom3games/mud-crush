@@ -1,9 +1,9 @@
 // 車の絵: ダンプ・ゴミ収集車・改造バス。運転台とボンネットは横から見た輪郭を押し出して作り、斜めの窓・面取り・部品（灯り・格子・ミラー・泥よけ・タンク・リベット）を足す。
 // タイヤは実物のモデル（Poly Haven CC0）。前のバンパーは別の入れ物で、壊れたら外れて飛ぶ。泥の汚れは車ごとの uDirt で下から上へ付いていく
 import * as THREE from 'three'
-import { Baker, rbox } from './models.js?v=6'
-import { numberTexture, hazardTexture, grungeTexture, wornPaintTexture } from './textures.js?v=6'
-import { assets } from './assets.js?v=6'
+import { Baker, rbox } from './models.js?v=7'
+import { numberTexture, hazardTexture, grungeTexture, wornPaintTexture } from './textures.js?v=7'
+import { assets } from './assets.js?v=7'
 
 const box = (w, h, d) => new THREE.BoxGeometry(w, h, d)
 const cyl = (r0, r1, h, n = 12) => new THREE.CylinderGeometry(r0, r1, h, n)

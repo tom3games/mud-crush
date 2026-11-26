@@ -1,11 +1,11 @@
 // 入口: 画面の切り替え・入力・HUD・音・ループ。試合の中身は sim.js、CPU は cpu.js、絵は stage.js
 import * as THREE from 'three'
-import { createState, step, DT, BODIES, BUMPERS, TIRES, ENGINES, CAR_COLORS, GRACE } from './sim.js?v=6'
-import { EngineMix } from './engine.js?v=6'
-import { makeInputs } from './cpu.js?v=6'
-import { Stage } from './stage.js?v=6'
-import { loadAssets } from './assets.js?v=6'
-import { SAFE0, WORLD, POLES, BOXES, MUDS } from './arena.js?v=6'
+import { createState, step, DT, BODIES, BUMPERS, TIRES, ENGINES, CAR_COLORS, GRACE } from './sim.js?v=7'
+import { EngineMix } from './engine.js?v=7'
+import { makeInputs } from './cpu.js?v=7'
+import { Stage } from './stage.js?v=7'
+import { loadAssets } from './assets.js?v=7'
+import { SAFE0, WORLD, POLES, BOXES, MUDS } from './arena.js?v=7'
 
 const Q = new URLSearchParams(location.search)
 const $ = id => document.getElementById(id)
@@ -164,7 +164,7 @@ $('btnTitle').addEventListener('click', () => toTitle())
 $('btnPost').addEventListener('click', () => {
   const rk = $('rkN').textContent, c = me()
   const txt = `鉄と泥で${rk}位。ひっくり返した ${c ? c.flips : 0}台。ダンプとバスで潰し合う6台バトル`
-  window.open('https://x.com/intent/post?text=' + encodeURIComponent(txt + '\n#鉄と泥') + '&url=' + encodeURIComponent('https://tom3games.github.io/mud-crush/'), '_blank')
+  window.open('https://x.com/intent/post?text=' + encodeURIComponent(txt + '\n#鉄と泥') + '&url=' + encodeURIComponent('https://tom3games.com/play/mud-crush/'), '_blank')
 })
 let paused = false, lockedAt = 0, pausedAt = 0
 function setPaused(on, leaving = false) {
