@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>鉄と泥｜ダンプとバスで潰し合う6台バトル・無料ブラウザ車ゲーム</title>
+<meta name="description" content="泥の採石場で、ダンプ・ゴミ収集車・改造バスの6台が潰し合う。最初に車体・バンパー・タイヤ・エンジンを選び、ニトロで突っ込んで、横から当ててひっくり返す。スマホで遊べる無料ブラウザゲーム。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="鉄と泥｜ダンプとバスで潰し合う6台バトル">
+<meta property="og:description" content="泥の採石場で重い車が潰し合う。パーツを選んで、ニトロで突っ込んで、ひっくり返せ。無料・登録なし。">
+<meta property="og:image" content="https://tom3games.github.io/mud-crush/og.png">
+<meta property="og:url" content="https://tom3games.github.io/mud-crush/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://tom3games.github.io/mud-crush/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 fill=%27%231a130e%27/%3E%3Cpath d=%27M3 23V13h12l4 4h10v6z%27 fill=%27%23c4571f%27/%3E%3Ccircle cx=%2710%27 cy=%2725%27 r=%274%27 fill=%27%23d9c7a4%27/%3E%3Ccircle cx=%2724%27 cy=%2725%27 r=%274%27 fill=%27%23d9c7a4%27/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Noto+Sans+JP:wght@500;700;900&family=Shippori+Mincho+B1:wght@800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=1">
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.js" } }</script>
+<style>[hidden]{display:none!important}</style>
+<script>
+(function(){
+  function f(){var v=window.visualViewport,h=v&&v.height?v.height:innerHeight;document.documentElement.style.setProperty('--vh',Math.round(h)+'px')}
+  f();addEventListener('resize',f);addEventListener('orientationchange',function(){setTimeout(f,150);setTimeout(f,500)});
+  if(window.visualViewport){visualViewport.addEventListener('resize',f);visualViewport.addEventListener('scroll',f)}
+})();
+(function(){
+  var opt={passive:false};
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){document.addEventListener(n,function(e){e.preventDefault()},opt)});
+  document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)e.preventDefault()},opt);
+  var last=0;document.addEventListener('touchend',function(e){var n=Date.now();if(n-last<300&&!(e.target.closest&&e.target.closest('button,a')))e.preventDefault();last=n},opt);
+  document.addEventListener('dblclick',function(e){e.preventDefault()},opt);
+  window.addEventListener('wheel',function(e){if(e.ctrlKey)e.preventDefault()},opt);
+  window.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&['+','-','=','0',';'].indexOf(e.key)>=0)e.preventDefault()});
+})();
+(function(){
+  var errs=[];
+  window.addEventListener('error',function(e){errs.push((e.message||'error')+' @'+(e.filename||'')+':'+(e.lineno||''))});
+  window.addEventListener('unhandledrejection',function(e){errs.push('reject: '+(e.reason&&e.reason.message||e.reason))});
+  window.__jsUp=false;
+  setTimeout(function(){
+    if(window.__mcReady) return;
+    var d=document.createElement('div');d.id='boot-err';
+    d.textContent=(window.__jsUp?'読み込みに時間がかかっています':'起動できませんでした')+'\n'+(errs.join('\n')||'')+'\n'+navigator.userAgent;
+    if(!window.__jsUp||errs.length) document.body.appendChild(d);
+  },12000);
+})();
+</script>
+</head>
+<body>
+<div id="view"></div>
+<canvas id="crack"></canvas>
+<div id="vig"></div>
+<canvas id="wind"></canvas>
+
+<div id="loading">
+  <svg class="lt-truck" viewBox="0 0 220 90" aria-hidden="true"><path d="M8 62V34h52l14 12h46V30h20l22 16h34v16z" fill="#c4571f"/><rect x="108" y="22" width="60" height="6" fill="#8d3a14"/><circle cx="46" cy="66" r="15" fill="#15110d" stroke="#d9c7a4" stroke-width="4"/><circle cx="168" cy="66" r="15" fill="#15110d" stroke="#d9c7a4" stroke-width="4"/><circle cx="196" cy="66" r="15" fill="#15110d" stroke="#d9c7a4" stroke-width="4"/></svg>
+  <div class="lt">鉄と泥</div><div class="lb"><i id="loadbar"></i></div><div class="ls">採石場に入る</div>
+</div>
+
+<section id="title" hidden>
+  <div class="tlogo">
+    <p class="kick">車の潰し合い・6台</p>
+    <h1><span>鉄と</span><span>泥</span></h1>
+    <p class="en">IRON &amp; MUD</p>
+    <p class="tape"><b>最後に走っていた1台が勝ち。</b><b>横からひっくり返せば1点。</b></p>
+  </div>
+  <div class="tact">
+    <button id="goPrep" class="plate big">出撃</button>
+    <button id="howT" class="tlink">あそび方</button>
+  </div>
+  <div class="tfoot">
+    <button id="muteT" class="mini" aria-label="音"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9z" fill="currentColor"/><path class="on" d="M16 8a5 5 0 010 8M19 5a9 9 0 010 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <p class="cred">音: CC0の録音素材・音楽は作者の制作（CREDITSに記載）</p>
+  </div>
+  <div class="how" id="howPanel" role="dialog" aria-modal="true">
+    <div class="howc">
+      <h2>あそび方</h2>
+      <dl class="pc">
+        <dt>W</dt><dd>アクセル</dd>
+        <dt>S</dt><dd>ブレーキ・バック</dd>
+        <dt>A D</dt><dd>ハンドル</dd>
+        <dt>Shift</dt><dd>ニトロ（アクセルも兼ねる）</dd>
+        <dt>マウス</dt><dd>運転席から見回す</dd>
+      </dl>
+      <dl class="tp">
+        <dt>左の矢印</dt><dd>ハンドル</dd>
+        <dt>アクセル</dt><dd>押している間だけ進む</dd>
+        <dt>ニトロ</dt><dd>ぶつけると溜まる。押すと加速（アクセルは要らない）</dd>
+        <dt>画面をなぞる</dt><dd>見回す</dd>
+      </dl>
+      <ul class="rules">
+        <li>体当たりで壊れた所の性能が落ちる。前は遅くなり、横はハンドルがぶれ、後ろはバックできなくなる。</li>
+        <li>横から強く当てると、相手の車が傾く。ひっくり返せば1点。</li>
+        <li>時間がたつと場内が狭くなる。外は崩れた地面で、体力が減っていく。</li>
+      </ul>
+      <p class="crd">効果音は rubberduck・Kenney・domasx2 ほかの CC0 の録音素材。音楽は作者の制作。</p>
+      <button id="howX" class="plate">閉じる</button>
+    </div>
+  </div>
+</section>
+
+<section id="prep" hidden>
+  <div class="ptop"><p class="plab">整備</p><p id="pbuild"></p></div>
+  <div class="ppanel">
+    <div id="ptabs" role="tablist"></div>
+    <div id="popts"></div>
+    <button id="pGo" class="plate big">出撃</button>
+  </div>
+</section>
+
+<section id="hud" hidden>
+  <div id="count"><b id="cn">6</b><span>台</span></div>
+  <div id="flipn" hidden><b id="fn">0</b><span>転覆</span></div>
+  <canvas id="radar" width="176" height="176"></canvas>
+  <ul id="feed"></ul>
+  <div id="msg"></div>
+  <div id="marks"></div>
+  <div id="dmg" aria-hidden="true">
+    <svg viewBox="0 0 60 100"><path class="zf" d="M12 6h36l4 18H8z"/><path class="zl" d="M6 28h10v44H6z"/><path class="zr" d="M44 28h10v44H44z"/><path class="zb" d="M8 76h44l-4 18H12z"/><rect x="18" y="28" width="24" height="44" class="zc"/></svg>
+  </div>
+  <p id="hint"></p>
+  <div id="spd"><b id="kmh">0</b><span>km/h</span></div>
+  <div id="tc">
+    <button id="bL" class="rb arrow" aria-label="左"><svg viewBox="0 0 48 48"><path d="M30 10L14 24l16 14"/></svg></button>
+    <button id="bR" class="rb arrow" aria-label="右"><svg viewBox="0 0 48 48"><path d="M18 10l16 14-16 14"/></svg></button>
+    <button id="bGas" class="rb gas" aria-label="アクセル"><svg viewBox="0 0 48 64"><rect x="8" y="4" width="32" height="56" rx="8"/><path d="M15 16h18M15 26h18M15 36h18M15 46h18"/></svg><span>アクセル</span></button>
+    <button id="bBack" class="rb back" aria-label="バック"><span>バック</span></button>
+    <button id="bNitro" class="rb nitro" aria-label="ニトロ"><svg class="ring" viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="44"/><circle id="nRing" class="bar" cx="50" cy="50" r="44" pathLength="100"/></svg><b>ニトロ</b></button>
+    <button id="bPause" class="rb pause" aria-label="一時停止"><svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+    <button id="bMute" class="rb mute" aria-label="音"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9z"/><path class="on" d="M16 8a5 5 0 010 8M19 5a9 9 0 010 14"/></svg></button>
+  </div>
+</section>
+
+<section id="result" hidden>
+  <div class="card">
+    <p class="rank"><b id="rkN">1</b><span>位</span></p>
+    <p class="verdict" id="rkV"></p>
+    <ol id="rkList"></ol>
+    <div class="acts"><button id="btnAgain" class="plate">もう一回</button><button id="btnPrep" class="plate ghost">整備しなおす</button><button id="btnTitle" class="plate ghost">タイトルへ</button></div>
+    <button id="btnPost" class="tlink">Xでポスト</button>
+  </div>
+</section>
+<section id="pause" hidden>
+  <div class="pcard">
+    <h2>一時停止</h2>
+    <button id="pResume" class="plate">つづける</button>
+    <button id="pQuit" class="plate ghost">タイトルへ</button>
+  </div>
+</section>
+<div id="err"></div>
+
+<script src="js/sfx.js"></script>
+<script type="module" src="js/main.js?v=1"></script>
+<script src="support.js?v=1" data-ja="ガソリン" data-en="some gas"></script>
+</body>
+</html>
